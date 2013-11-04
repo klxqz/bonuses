@@ -1,0 +1,39 @@
+<style>
+.bc_val{
+    margin-left: 5px;
+}
+</style>
+<script>
+var bonus_percent = parseInt({$percent});
+var bonus_precision = parseInt({$precision});
+var bonus_currency_sign = '{$currency_sign}';
+var last_price = 0;
+
+function round(a,b) {
+    b = b || 0;
+    return Math.round(a * Math.pow(10,b)) / Math.pow(10,b);
+}
+
+$(document).ready(function(){
+    $('.offers').each(function(){
+        if($(this).find('price')) {
+
+            price = $(this).find('.price').text();
+            
+            price = price.replace(/[^0-9\,]/g,'',price);
+            price = parseFloat(price.replace(',','.'));
+            bonus = price * bonus_percent / 100.0;
+            
+            if('{$round_func}'=='round') {
+                bonus = round(bonus, bonus_precision);
+            } else {
+                bonus = Math.{$round_func}(bonus);
+            }
+            bonus = bonus.toString() + ' ' + bonus_currency_sign;
+            
+            $(this).find('.price').after('<div class="bonuses_cat"><span class="bc_title">Бонусы:</span><span class="bc_val">' + bonus +'</span></div>')
+        }
+    });
+});
+
+</script>
