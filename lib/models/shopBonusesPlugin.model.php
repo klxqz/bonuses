@@ -1,6 +1,6 @@
 <?php
 
-class shopBonusesModel extends waModel
+class shopBonusesPluginModel extends waModel
 {
     protected $table = 'shop_bonuses';
     

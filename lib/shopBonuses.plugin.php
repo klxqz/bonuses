@@ -60,7 +60,7 @@ class shopBonusesPlugin extends shopPlugin
             
             $bonus = shop_currency($bonus,$order['currency'],$def_currency,false);
             
-            $bonus_model = new shopBonusesModel();
+            $bonus_model = new shopBonusesPluginModel();
             if($sb = $bonus_model->getByField('contact_id',$order['contact_id'])) {
                 
                 $exist_bonus = $this->getUnburnedBonus($order['contact_id']);
@@ -128,7 +128,7 @@ class shopBonusesPlugin extends shopPlugin
             $use_bonus = $session->read('use_bonus');
             if($use_bonus) {
                 $contact_id = wa()->getUser()->getId();
-                $bonus_model = new shopBonusesModel();
+                $bonus_model = new shopBonusesPluginModel();
                 $sb = $bonus_model->getByField('contact_id',$contact_id);
                 $bonus_model->updateById($sb['id'], array('bonus'=>$sb['bonus']-$use_bonus));
             }
@@ -141,7 +141,7 @@ class shopBonusesPlugin extends shopPlugin
     
     public function getUnburnedBonus($contact_id)
     {
-        $bonus_model = new shopBonusesModel();
+        $bonus_model = new shopBonusesPluginModel();
         $sb = $bonus_model->getByField('contact_id',$contact_id);
         if($sb) {
             if($this->isBurn($sb)) {
