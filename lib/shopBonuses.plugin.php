@@ -83,7 +83,7 @@ class shopBonusesPlugin extends shopPlugin
         }
     }
     
-    public function frontendMy($params)
+    public function frontendMy()
     {
         
         if($this->getSettings('status') && $this->getSettings('frontend_my')) {
@@ -121,7 +121,7 @@ class shopBonusesPlugin extends shopPlugin
         } 
     }
     
-    public function orderActionCreate($params)
+    public function orderActionCreate()
     {
         if($this->getSettings('status')) {
             $session = wa()->getStorage();
