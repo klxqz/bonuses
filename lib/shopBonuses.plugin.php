@@ -34,7 +34,7 @@ class shopBonusesPlugin extends shopPlugin
         }
     }
     
-    public function frontendCart($cart)
+    public function frontendCart()
     {
         if($this->getSettings('status') && $this->getSettings('frontend_cart')) {
             $cart = new shopCart();

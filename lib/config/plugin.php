@@ -4,9 +4,10 @@ return array(
     'name' => 'Бонусы за покупку',
     'description' => 'Начисление бонусов за совершение покупок',
     'img' => 'img/bonuses.png',
-    'vendor' => 903438,
+    'vendor' => '985310',
     'version' => '1.0.0',
     'rights' => false,
+    'frontend' => true,
     'handlers' => array(
         'frontend_product' => 'frontendProduct',
         'frontend_category' => 'frontendCategory',
