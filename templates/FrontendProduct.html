@@ -1,0 +1,50 @@
+<span class="frontend_product_bonus">
+    <span class="title">Бонус:</span>
+    <span class="bonus_val">{shop_currency($bonus)}</span>
+</span>
+
+<script>
+    $(function() {
+        var bonus_percent = parseInt({$percent});
+        var bonus_precision = parseInt({$precision});
+        var bonus_currency_sign = '{$currency_sign}';
+        var last_price = null;
+        function round(a, b) {
+            b = b || 0;
+            return Math.round(a * Math.pow(10, b)) / Math.pow(10, b);
+        }
+
+        function changePrice() {
+            var price = $('.add2cart .price').text();
+            if (last_price != price) {
+                last_price = price;
+                price = price.replace(/[^0-9\,]/g, '', price);
+                price = parseFloat(price.replace(',', '.'));
+                bonus = price * bonus_percent / 100.0;
+                if ('{$round_func}' == 'round') {
+                    bonus = round(bonus, bonus_precision);
+                } else {
+                    bonus = Math.{$round_func}(bonus);
+                }
+                bonus = bonus.toString() + ' ' + bonus_currency_sign;
+                $('.bonus_val').text(bonus);
+            }
+        }
+        setInterval(function () {
+            var price = $('.add2cart .price').text();
+            if (last_price != price) {
+                last_price = price;
+                price = price.replace(/[^0-9\,]/g, '', price);
+                price = parseFloat(price.replace(',', '.'));
+                bonus = price * bonus_percent / 100.0;
+                if ('{$round_func}' == 'round') {
+                    bonus = round(bonus, bonus_precision);
+                } else {
+                    bonus = Math.{$round_func}(bonus);
+                }
+                bonus = bonus.toString() + ' ' + bonus_currency_sign;
+                $('.bonus_val').text(bonus);
+            }
+        }, 500);
+    });
+</script>
