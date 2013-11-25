@@ -58,16 +58,11 @@ class shopBonusesPlugin extends shopPlugin {
             $order = $order_model->getById($params['order_id']);
             $total = $order['total'] - $order['shipping'];
             $bonus = $this->getBonus($total);
-
             $def_currency = wa('shop')->getConfig()->getCurrency(true);
-
             $bonus = shop_currency($bonus, $order['currency'], $def_currency, false);
-
             $bonus_model = new shopBonusesPluginModel();
             if ($sb = $bonus_model->getByField('contact_id', $order['contact_id'])) {
-
                 $exist_bonus = $this->getUnburnedBonus($order['contact_id']);
-
                 $data = array(
                     'date' => waDateTime::date('Y-m-d H:i:s'),
                     'bonus' => $bonus + $exist_bonus,
@@ -80,6 +75,24 @@ class shopBonusesPlugin extends shopPlugin {
                     'bonus' => $bonus,
                 );
                 $bonus_model->insert($data);
+            }
+        }
+    }
+
+    public function orderActionRefund($params) {
+        if ($this->getSettings('status')) {
+            $order_model = new shopOrderModel();
+            $order = $order_model->getById($params['order_id']);
+            $total = $order['total'] - $order['shipping'];
+            $bonus = $this->getBonus($total);
+
+            $bonus_model = new shopBonusesPluginModel();
+            if ($sb = $bonus_model->getByField('contact_id', $order['contact_id'])) {
+                $exist_bonus = $this->getUnburnedBonus($order['contact_id']);
+                $data = array(
+                    'bonus' => ($exist_bonus - $bonus > 0 ? $exist_bonus - $bonus : 0),
+                );
+                $bonus_model->updateById($sb['id'], $data);
             }
         }
     }

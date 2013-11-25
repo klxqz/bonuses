@@ -20,5 +20,6 @@ return array(
         'frontend_my' => 'frontendMy',
         'order_calculate_discount' => 'orderCalculateDiscount',
         'order_action.create' => 'orderActionCreate',
+        'order_action.refund' => 'orderActionRefund',
     )
 );
