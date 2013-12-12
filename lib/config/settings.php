@@ -60,9 +60,9 @@ return array(
     ),
     'cart_text' => array(
         'title' => 'Текс в корзине',
-        'description' => 'Текс отображаемый в корзине. Вместо %s -подставляется число бонусов',
+        'description' => 'Текс отображаемый в корзине. Вместо %s -подставляется число бонусов.<br/>Возможно использование HTML',
         'value' => 'За эту покупку вам будет начислено бонусов:  %s',
-        'control_type' => waHtmlControl::INPUT,
+        'control_type' => waHtmlControl::TEXTAREA,
     ),
     'frontend_cart' => array(
         'title' => 'Стандартный вывод бонусов в корзине',

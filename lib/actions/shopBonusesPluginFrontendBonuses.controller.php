@@ -9,7 +9,7 @@ class shopBonusesPluginFrontendBonusesController extends waJsonController {
     public function execute() {
         $plugin = wa()->getPlugin('bonuses');
         $cart = new shopCart();
-        $total = $cart->total(false);
+        $total = $cart->total(true);
         $currency = wa('shop')->getConfig()->getCurrency(false);
         $bonus = $plugin->getBonus($total);
         $cart_text = $plugin->getSettings('cart_text');

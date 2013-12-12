@@ -39,7 +39,7 @@ class shopBonusesPlugin extends shopPlugin {
     public function frontendCart() {
         if ($this->getSettings('status') && $this->getSettings('frontend_cart')) {
             $cart = new shopCart();
-            $total = $cart->total(false);
+            $total = $cart->total(true);
             $currency = wa('shop')->getConfig()->getCurrency(false);
             $bonus = $this->getBonus($total);
             $cart_text = $this->getSettings('cart_text');
