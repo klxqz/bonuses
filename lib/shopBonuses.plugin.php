@@ -6,6 +6,15 @@
  */
 class shopBonusesPlugin extends shopPlugin {
 
+    public function backendMenu() {
+        if ($this->getSettings('status')) {
+            $html = '<li ' . (waRequest::get('plugin') == $this->id ? 'class="selected"' : 'class="no-tab"') . '>
+                        <a href="?plugin=bonuses">Бонусы</a>
+                    </li>';
+            return array('core_li' => $html);
+        }
+    }
+
     public function frontendProduct($product) {
         if ($this->getSettings('status') && $this->getSettings('frontend_product')) {
             $currency = wa('shop')->getConfig()->getCurrency(false);

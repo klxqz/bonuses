@@ -21,5 +21,6 @@ return array(
         'order_calculate_discount' => 'orderCalculateDiscount',
         'order_action.create' => 'orderActionCreate',
         'order_action.refund' => 'orderActionRefund',
+        'backend_menu' => 'backendMenu',
     )
 );
