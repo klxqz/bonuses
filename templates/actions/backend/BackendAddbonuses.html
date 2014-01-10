@@ -1,0 +1,57 @@
+<style>
+    select{
+        width: 200px;
+    }
+    #response-status{
+        vertical-align: middle;
+        font-weight: bold;
+    }
+</style>
+
+<div class="sidebar left400px s-order-customer-details">
+    <div class="block top-padded">
+        <h2><a href="#" class="back">&larr; Назад</a><span>Покупатель</span></h2>
+        <em class="errormsg s-customer-errors" style="font-size: 1.1em;"></em>
+
+        <input id="customer-autocomplete" type="search" class="search large long" placeholder="Введите имя, email или номер телефона">
+
+    </div>
+    <div class="block">
+        <div class="fields form width100px" id="s-order-edit-customer">
+            <div class="field-group">
+
+                <div class="fields form width100px">
+                    <div class="field-group">
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="content left400px bordered-left">
+    <div class="block double-padded">
+        <h2><span>Бонусы</span></h2>
+        <form class="add-bonuses-form" action="?plugin=bonuses&action=newBonus">
+            <input type="hidden" id="s-customer-id" name="contact_id" />
+            <table>
+                <tr>
+                    <td>Количество бонусов:</td>
+                    <td>&nbsp;<input class="bonus_input" name="bonus" type="text" value="" /></td>
+                </tr>
+                <tr>
+                    <td>Дата начисления:</td>
+                    <td>&nbsp;<input class="date_input" name="date" type="text" value="" /></td>
+                </tr>
+            </table>
+
+            <input type="submit" class="button green large" value="Сохранить">
+            <span id="response-status"></span>
+
+        </form>
+        <div class="clear-both"></div>
+    </div>
+</div>
