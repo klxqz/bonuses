@@ -13,7 +13,7 @@ class shopBonusesPluginFrontendBonusesController extends waJsonController {
         $currency = wa('shop')->getConfig()->getCurrency(false);
         $bonus = $plugin->getBonus($total);
         $cart_text = $plugin->getSettings('cart_text');
-        $cart_bonuses = sprintf($cart_text, shop_currency($bonus, $currency, $currency));
+        $cart_bonuses = shop_currency($bonus, $currency, $currency);
         $this->response['cart_bonuses'] = $cart_bonuses;
     }
 

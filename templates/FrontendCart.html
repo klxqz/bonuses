@@ -8,7 +8,7 @@
                     url: '{$wa_app_url}bonuses/',
                     dataType: 'json',
                     success: function(data, textStatus, jqXHR) {
-                        $('.cart_bonuses').html(data.data.cart_bonuses);
+                        $('.bonus_val').html(data.data.cart_bonuses);
                     }
                 });
                 cart_total = $('.cart-total').html();
@@ -17,4 +17,4 @@
     });
 </script>
 
-<div class="cart_bonuses">{$cart_bonuses}</div>
+<div class="cart_bonuses">За эту покупку вам будет начислено бонусов: <span class="bonus_val">{$cart_bonuses}</span></div>

@@ -6,6 +6,23 @@
  */
 class shopBonusesPlugin extends shopPlugin {
 
+    protected static $plugin;
+
+    public function __construct($info) {
+        parent::__construct($info);
+        if (!self::$plugin) {
+            self::$plugin = &$this;
+        }
+    }
+
+    protected static function getThisPlugin() {
+        if (self::$plugin) {
+            return self::$plugin;
+        } else {
+            return wa()->getPlugin('bonuses');
+        }
+    }
+
     public function backendMenu() {
         if ($this->getSettings('status')) {
             $html = '<li ' . (waRequest::get('plugin') == $this->id ? 'class="selected"' : 'class="no-tab"') . '>
@@ -16,19 +33,45 @@ class shopBonusesPlugin extends shopPlugin {
     }
 
     public function frontendProduct($product) {
-        if ($this->getSettings('status') && $this->getSettings('frontend_product')) {
+        if ($this->getSettings('frontend_product')) {
+            $html = self::displayFrontendProduct($product);
+            return array('cart' => $html);
+        }
+    }
+
+    public static function displayFrontendProduct($product) {
+        $html = '';
+        $plugin = self::getThisPlugin();
+        if ($plugin->getSettings('status')) {
             $currency = wa('shop')->getConfig()->getCurrency(false);
             $currency_sign = wa()->getConfig()->getCurrencies($currency);
-            $bonus = $this->getBonus($product['price']);
+            $bonus = $plugin->getBonus($product['price']);
             $view = wa()->getView();
             $view->assign('bonus', $bonus);
             $view->assign('currency_sign', $currency_sign[$currency]['sign']);
-            $view->assign('percent', $this->getSettings('percent'));
-            $view->assign('precision', $this->getSettings('precision'));
-            $view->assign('round_func', $this->getSettings('round_func'));
-            $html = $view->fetch('plugins/bonuses/templates/FrontendProduct.html');
-            return array('cart' => $html);
+            $view->assign('percent', $plugin->getSettings('percent'));
+            $view->assign('precision', $plugin->getSettings('precision'));
+            $view->assign('round_func', $plugin->getSettings('round_func'));
+            $template_path = wa()->getDataPath('plugins/bonuses/templates/FrontendProduct.html', false, 'shop', true);
+            if (!file_exists($template_path)) {
+                $template_path = wa()->getAppPath('plugins/bonuses/templates/FrontendProduct.html', 'shop');
+            }
+            $html = $view->fetch($template_path);
         }
+        waSystem::popActivePlugin();
+        return $html;
+    }
+
+    public static function getBonusByPrice($price = 0) {
+        $bonus = '';
+        $plugin = self::getThisPlugin();
+        if ($plugin->getSettings('status')) {
+            $bonus = $plugin->getBonus($price);
+            $currency = wa('shop')->getConfig()->getCurrency(false);
+            $bonus = shop_currency($bonus);
+        }
+        waSystem::popActivePlugin();
+        return $bonus;
     }
 
     public function frontendCategory($category) {
@@ -46,19 +89,56 @@ class shopBonusesPlugin extends shopPlugin {
     }
 
     public function frontendCart() {
-        if ($this->getSettings('status') && $this->getSettings('frontend_cart')) {
+        if ($this->getSettings('frontend_cart')) {
+            return self::displayFrontendCart();
+        }
+    }
+
+    public static function displayFrontendCart() {
+        $html = '';
+        $plugin = self::getThisPlugin();
+        if ($plugin->getSettings('status')) {
             $cart = new shopCart();
             $total = $cart->total(true);
             $currency = wa('shop')->getConfig()->getCurrency(false);
-            $bonus = $this->getBonus($total);
-            $cart_text = $this->getSettings('cart_text');
-            $cart_bonuses = sprintf($cart_text, shop_currency($bonus, $currency, $currency));
+            $bonus = $plugin->getBonus($total);
+            $cart_bonuses = shop_currency($bonus, $currency, $currency);
             $view = wa()->getView();
             $view->assign('cart_bonuses', $cart_bonuses);
-            $template_path = wa()->getAppPath('plugins/bonuses/templates/FrontendCart.html', 'shop');
+            $template_path = wa()->getDataPath('plugins/bonuses/templates/FrontendCart.html', false, 'shop', true);
+            if (!file_exists($template_path)) {
+                $template_path = wa()->getAppPath('plugins/bonuses/templates/FrontendCart.html', 'shop');
+            }
             $html = $view->fetch($template_path);
             return $html;
         }
+        waSystem::popActivePlugin();
+        return $html;
+    }
+
+    public function frontendMy() {
+        if ($this->getSettings('frontend_my')) {
+            return self::displayFrontendMy();
+        }
+    }
+
+    public static function displayFrontendMy() {
+        $html = '';
+        $plugin = self::getThisPlugin();
+        if ($plugin->getSettings('status')) {
+            $contact_id = wa()->getUser()->getId();
+            $bonus = $plugin->getUnburnedBonus($contact_id);
+            $bonus = shop_currency($bonus);
+            $view = wa()->getView();
+            $view->assign('bonus', $bonus);
+            $template_path = wa()->getDataPath('plugins/bonuses/templates/FrontendMy.html', false, 'shop', true);
+            if (!file_exists($template_path)) {
+                $template_path = wa()->getAppPath('plugins/bonuses/templates/FrontendMy.html', 'shop');
+            }
+            $html = $view->fetch($template_path);
+        }
+        waSystem::popActivePlugin();
+        return $html;
     }
 
     public function orderActionComplete($params) {
@@ -103,19 +183,6 @@ class shopBonusesPlugin extends shopPlugin {
                 );
                 $bonus_model->updateById($sb['id'], $data);
             }
-        }
-    }
-
-    public function frontendMy() {
-
-        if ($this->getSettings('status') && $this->getSettings('frontend_my')) {
-            $contact_id = wa()->getUser()->getId();
-
-            $bonus = $this->getUnburnedBonus($contact_id);
-            $my_text = $this->getSettings('my_text');
-
-            $my_text = sprintf($my_text, shop_currency($bonus));
-            return $my_text;
         }
     }
 
