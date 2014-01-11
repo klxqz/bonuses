@@ -22,8 +22,6 @@
         {/literal}
 
         <div class="field-group">
-
-
             <div class="field">
                 <div class="name">
                     Статус плагина
@@ -42,7 +40,7 @@
                 </div>
                 <div class="value">
                     <input type="text" name="shop_bonuses[percent]" value="{$settings.percent|escape}"  />
-                    <p class="hint">Количество начисляемых бонусов ровняется проценту от товара</p>
+                    <p class="hint">Количество начисляемых бонусов равняется проценту от товара</p>
                 </div>
             </div>
 
@@ -74,8 +72,8 @@
                 </div>
                 <div class="value">
                     <select name="shop_bonuses[burn_bonus]">
-                        <option {if $settings.burn_bonus == '0'} selected="selected"{/if} value="1">Выключен</option>
-                        <option {if $settings.burn_bonus == '1'} selected="selected"{/if} value="0">Включен</option>
+                        <option {if $settings.burn_bonus == '0'} selected="selected"{/if} value="0">Выключен</option>
+                        <option {if $settings.burn_bonus == '1'} selected="selected"{/if} value="1">Включен</option>
                     </select>
                     <p class="hint">Накопленные бонусы сгорают после N дней, если в течение этих дней покупатель не успел их потратить</p>
                 </div>
