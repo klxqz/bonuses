@@ -5,7 +5,7 @@
             if (cart_total != $('.cart-total').html()) {
                 $.ajax({
                     type: 'POST',
-                    url: '{$wa_app_url}bonuses/',
+                    url: '{$wa_app_url}bonuses/cart/',
                     dataType: 'json',
                     success: function(data, textStatus, jqXHR) {
                         $('.bonus_val').html(data.data.cart_bonuses);

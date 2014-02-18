@@ -23,6 +23,25 @@ class shopBonusesPlugin extends shopPlugin {
         }
     }
 
+    public function backendProductEdit($product) {
+        $html = '<div class="field">
+                    <div class="name">Размер бонусов при покупке данного товара</div>
+                    <div class="value no-shift">
+                        <input type="text" name="product[bonus_val]" value="' . $product->bonus_val . '" class="bold numerical" style="width:100px;">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="name">Тип бонусов</div>
+                    <div class="value no-shift">
+                        <select name="product[bonus_type]">
+                            <option ' . ($product->bonus_type == 'percent' ? 'selected="selected"' : '') . ' value="percent">Процент</option>
+                            <option ' . ($product->bonus_type == 'absolute' ? 'selected="selected"' : '') . ' value="absolute">Абсолют</option>
+                        </select>
+                    </div>
+                </div>';
+        return array('basics' => $html);
+    }
+
     public function backendMenu() {
         if ($this->getSettings('status')) {
             $html = '<li ' . (waRequest::get('plugin') == $this->id ? 'class="selected"' : 'class="no-tab"') . '>
@@ -39,17 +58,44 @@ class shopBonusesPlugin extends shopPlugin {
         }
     }
 
+    public function getProductBonus($product_id, $sku_id = null) {
+        $product_model = new shopProductModel();
+        $product = $product_model->getById($product_id);
+        $sku_model = new shopProductSkusModel();
+
+        if ($product['bonus_val'] > 0) {
+            if ($product['bonus_type'] == 'absolute') {
+                return $product['bonus_val'];
+            } elseif ($product['bonus_type'] == 'percent') {
+                if (!$sku_id) {
+                    return $this->getBonus($product['price'], $product['bonus_val']);
+                } else {
+                    $sku = $sku_model->getById($sku_id);
+                    return $this->getBonus($sku['price'], $product['bonus_val']);
+                }
+            }
+        } else {
+            if (!$sku_id) {
+                return $this->getBonus($product['price']);
+            } else {
+                $sku = $sku_model->getById($sku_id);
+                return $this->getBonus($sku['price']);
+            }
+        }
+    }
+
     public static function displayFrontendProduct($product) {
         $html = '';
         $plugin = self::getThisPlugin();
         if ($plugin->getSettings('status')) {
             $currency = wa('shop')->getConfig()->getCurrency(false);
             $currency_sign = wa()->getConfig()->getCurrencies($currency);
-            $bonus = $plugin->getBonus($product['price']);
+            $bonus = $plugin->getProductBonus($product['id']);
             $view = wa()->getView();
             $view->assign('bonus', $bonus);
             $view->assign('currency_sign', $currency_sign[$currency]['sign']);
             $view->assign('percent', $plugin->getSettings('percent'));
+            $view->assign('product_bonus_type', $product['bonus_type']);
             $view->assign('precision', $plugin->getSettings('precision'));
             $view->assign('round_func', $plugin->getSettings('round_func'));
             $template_path = wa()->getDataPath('plugins/bonuses/templates/FrontendProduct.html', false, 'shop', true);
@@ -99,10 +145,14 @@ class shopBonusesPlugin extends shopPlugin {
         $plugin = self::getThisPlugin();
         if ($plugin->getSettings('status')) {
             $cart = new shopCart();
-            $total = $cart->total(true);
+            $items = $cart->items(false);
+            $bonus = 0;
+            foreach ($items as $item) {
+                $bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+            }
             $currency = wa('shop')->getConfig()->getCurrency(false);
-            $bonus = $plugin->getBonus($total);
-            $cart_bonuses = shop_currency($bonus, $currency, $currency);
+            
+            $cart_bonuses = shop_currency_html($bonus);
             $view = wa()->getView();
             $view->assign('cart_bonuses', $cart_bonuses);
             $template_path = wa()->getDataPath('plugins/bonuses/templates/FrontendCart.html', false, 'shop', true);
@@ -237,9 +287,15 @@ class shopBonusesPlugin extends shopPlugin {
         }
     }
 
-    public function getBonus($price) {
+    public function getBonus($price, $percent = null) {
         if ($this->getSettings('status')) {
-            $bonus = $price * $this->getSettings('percent') / 100.0;
+
+            if (!$percent) {
+                $percent = $this->getSettings('percent');
+            }
+
+            $bonus = $price * $percent / 100.0;
+
             $round_func = $this->getSettings('round_func');
             switch ($round_func) {
                 case 'round':

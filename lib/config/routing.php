@@ -5,5 +5,6 @@
  * @link http://wa-plugins.ru/
  */
 return array(
-    'bonuses/' => 'frontend/bonuses'
+    'bonuses/cart/' => 'frontend/cart',
+    'bonuses/product/' => 'frontend/product'
 );
