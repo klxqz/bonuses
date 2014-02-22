@@ -15,10 +15,11 @@
 
 
         {literal}
-        <p>{shopBonusesPlugin::displayFrontendProduct($product)} - код хелпера для вывода бонусов в карточке товара</p>
+        <p>{shopBonusesPlugin::displayFrontendProduct($product)} - код хелпера для вывода бонусов в карточке товара, $product - переменная товара</p>
         <p>{shopBonusesPlugin::displayFrontendCart()} - код хелпера для вывода бонусов в корзине</p>
         <p>{shopBonusesPlugin::displayFrontendMy()} - код хелпера для вывода бонусов в личном кабинете</p>
-        <p>{shopBonusesPlugin::getBonusByPrice($product.price)} - хелпер возвращает количество бонусов. В качестве параметра передается $product.price - цена товара</p>
+        <p>{shopBonusesPlugin::getBonusByProduct($product)} - код хелпера для получения бонусов, $product - переменная товара</p>
+        
         {/literal}
 
         <div class="field-group">
@@ -96,6 +97,18 @@
                     <p class="hint">Процент от заказа, который покупатель может оплатить бонусами. 0 - покупатель может оплатить весь заказ бонусами</p>
                 </div>
             </div>
+            <div class="field">
+                <div class="name">
+                    Начисление бонусов
+                </div>
+                <div class="value">
+                    <select name="shop_bonuses[order_status]">
+                        <option {if $settings.order_status == 'pay'} selected="selected"{/if} value="pay">Оплачен</option>
+                        <option {if $settings.order_status == 'complete'} selected="selected"{/if} value="complete">Выполнен</option>
+                    </select>
+                    <p class="hint">Начисление бонусов на счет покупателя происходит при установке статуса заказа "Оплачен" или "Выполнен"</p>
+                </div>
+            </div>
         </div>
 
         <div class="field-group">
@@ -113,37 +126,6 @@
             </div>
             {$template = $templates.FrontendProduct}
             {$key = 'FrontendProduct'}
-            <div class="field">
-                <div class="name">{$template.name}<br /><span class="hint">HTML + Smarty</span></div>
-                <div class="value no-shift">
-                    <div id="s-editor-core-wrapper">
-                        <textarea id="sf-template-{$key}"  class="body" name="templates[{$key}]">{$template.template}</textarea>
-                    </div>
-                </div>
-
-                {if $template.change_tpl}
-                <div class="value">
-                    <p class="gray"><i class="icon16 exclamation"></i>Внимание! Шаблон по умолчанию был изменен</p>
-                    <input type="checkbox" name="reset_tpls[{$key}]" value="1"  /> - Сбросить изменения, использовать шаблон по умолчанию
-                </div>
-                {/if}
-            </div>
-        </div>
-        <div class="field-group">
-            <div class="field">
-                <div class="name">
-                    Стандартный вывод бонусов на странице категории
-                </div>
-                <div class="value">
-                    <select name="shop_bonuses[frontend_category]">
-                        <option {if $settings.frontend_category == 0} selected="selected"{/if} value="0">Выключен</option>
-                        <option {if $settings.frontend_category == 1} selected="selected"{/if} value="1">Включен</option>
-                    </select>
-                    <p class="hint">Вы можете отключить стандартный вывод и использовать хелпер вывода, чтобы организовать вывод в произвольном месте</p>
-                </div>
-            </div>
-            {$template = $templates.FrontendCategory}
-            {$key = 'FrontendCategory'}
             <div class="field">
                 <div class="name">{$template.name}<br /><span class="hint">HTML + Smarty</span></div>
                 <div class="value no-shift">
@@ -239,7 +221,7 @@
 <script type="text/javascript">
     $(function() {
 
-        var ids = ["sf-template-FrontendProduct", "sf-template-FrontendCategory", "sf-template-FrontendCart", "sf-template-FrontendMy"];
+        var ids = ["sf-template-FrontendProduct", "sf-template-FrontendCart", "sf-template-FrontendMy"];
         for (var i = 0; i < ids.length; i++) {
 
             var c = CodeMirror.fromTextArea(document.getElementById(ids[i]), {

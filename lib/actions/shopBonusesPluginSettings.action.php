@@ -8,7 +8,6 @@ class shopBonusesPluginSettingsAction extends waViewAction {
 
     protected $templates = array(
         'FrontendProduct' => array('name' => 'Шаблон для вывода в карточке товара', 'tpl_path' => 'plugins/bonuses/templates/FrontendProduct.html'),
-        'FrontendCategory' => array('name' => 'Шаблон для вывода в категории товара', 'tpl_path' => 'plugins/bonuses/templates/FrontendCategory.html'),
         'FrontendCart' => array('name' => 'Шаблон для вывода в корзине', 'tpl_path' => 'plugins/bonuses/templates/FrontendCart.html'),
         'FrontendMy' => array('name' => 'Шаблон для вывода в личном кабинете', 'tpl_path' => 'plugins/bonuses/templates/FrontendMy.html'),
     );

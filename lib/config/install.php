@@ -13,8 +13,8 @@ $app_settings_model->set($plugin_id, 'precision', '2');
 $app_settings_model->set($plugin_id, 'burn_bonus', '1');
 $app_settings_model->set($plugin_id, 'burn_days', '30');
 $app_settings_model->set($plugin_id, 'bonus_discont', '50');
+$app_settings_model->set($plugin_id, 'order_status', 'complete');
 $app_settings_model->set($plugin_id, 'frontend_product', '1');
-$app_settings_model->set($plugin_id, 'frontend_category', '1');
 $app_settings_model->set($plugin_id, 'frontend_cart', '1');
 $app_settings_model->set($plugin_id, 'frontend_my', '1');
 
@@ -33,5 +33,13 @@ try {
     $model->query($sql);
 } catch (waDbException $ex) {
     $sql = "ALTER TABLE  `shop_product` ADD  `bonus_type` ENUM( 'percent', 'absolute' ) NOT NULL AFTER  `id`";
+    $model->query($sql);
+}
+
+try {
+    $sql = 'SELECT `use_bonus` FROM `shop_product` WHERE 0';
+    $model->query($sql);
+} catch (waDbException $ex) {
+    $sql = "ALTER TABLE `shop_product` ADD `use_bonus` TINYINT( 1 ) NOT NULL AFTER `id`";
     $model->query($sql);
 }

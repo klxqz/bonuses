@@ -14,7 +14,28 @@
                 cart_total = $('.cart-total').html();
             }
         }, 500);
+        $('.recalculate_bonus').click(function() {
+            $.ajax({
+                type: 'POST',
+                url: '{$wa_app_url}bonuses/recalculate/',
+                dataType: 'json',
+                data: {
+                    use_bonus: $('input[name="use_bonus"]').val()
+                },
+                success: function(data, textStatus, jqXHR) {
+                    location.reload();
+                }
+            });
+            return false;
+        });
+
     });
 </script>
+
+<div class="total_bonus">У Вас {$total_bonus} бонусов.</div>
+<div>
+    Использовать бонусов: <input type="text" name="use_bonus" value="{$use_bonus}" >
+    <a class="recalculate_bonus" href="#">Пересчитать</a>
+</div>
 
 <div class="cart_bonuses">За эту покупку вам будет начислено бонусов: <span class="bonus_val">{$cart_bonuses}</span></div>

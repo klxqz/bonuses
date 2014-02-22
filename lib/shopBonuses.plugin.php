@@ -25,6 +25,15 @@ class shopBonusesPlugin extends shopPlugin {
 
     public function backendProductEdit($product) {
         $html = '<div class="field">
+                    <div class="name">Использовать индивидуальные настройки бонусов для товара</div>
+                    <div class="value no-shift">
+                        <select name="product[use_bonus]">
+                            <option ' . ($product->use_bonus == '1' ? 'selected="selected"' : '') . ' value="1">Да</option>
+                            <option ' . ($product->use_bonus == '0' ? 'selected="selected"' : '') . ' value="0">Нет</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
                     <div class="name">Размер бонусов при покупке данного товара</div>
                     <div class="value no-shift">
                         <input type="text" name="product[bonus_val]" value="' . $product->bonus_val . '" class="bold numerical" style="width:100px;">
@@ -63,7 +72,7 @@ class shopBonusesPlugin extends shopPlugin {
         $product = $product_model->getById($product_id);
         $sku_model = new shopProductSkusModel();
 
-        if ($product['bonus_val'] > 0) {
+        if ($product['use_bonus']) {
             if ($product['bonus_type'] == 'absolute') {
                 return $product['bonus_val'];
             } elseif ($product['bonus_type'] == 'percent') {
@@ -71,7 +80,7 @@ class shopBonusesPlugin extends shopPlugin {
                     return $this->getBonus($product['price'], $product['bonus_val']);
                 } else {
                     $sku = $sku_model->getById($sku_id);
-                    return $this->getBonus($sku['price'], $product['bonus_val']);
+                    return $this->getBonus($sku['primary_price'], $product['bonus_val']);
                 }
             }
         } else {
@@ -79,25 +88,34 @@ class shopBonusesPlugin extends shopPlugin {
                 return $this->getBonus($product['price']);
             } else {
                 $sku = $sku_model->getById($sku_id);
-                return $this->getBonus($sku['price']);
+                return $this->getBonus($sku['primary_price']);
             }
         }
+    }
+
+    public static function getBonusByProduct($product) {
+        $bonus = 0;
+        $plugin = self::getThisPlugin();
+        if ($product['use_bonus']) {
+            if ($product['bonus_type'] == 'absolute') {
+                $bonus = $product['bonus_val'];
+            } elseif ($product['bonus_type'] == 'percent') {
+                $bonus = $plugin->getBonus($product['price'], $product['bonus_val']);
+            }
+        } else {
+            $bonus = $plugin->getBonus($product['price']);
+        }
+        waSystem::popActivePlugin();
+        return $bonus;
     }
 
     public static function displayFrontendProduct($product) {
         $html = '';
         $plugin = self::getThisPlugin();
         if ($plugin->getSettings('status')) {
-            $currency = wa('shop')->getConfig()->getCurrency(false);
-            $currency_sign = wa()->getConfig()->getCurrencies($currency);
             $bonus = $plugin->getProductBonus($product['id']);
             $view = wa()->getView();
-            $view->assign('bonus', $bonus);
-            $view->assign('currency_sign', $currency_sign[$currency]['sign']);
-            $view->assign('percent', $plugin->getSettings('percent'));
-            $view->assign('product_bonus_type', $product['bonus_type']);
-            $view->assign('precision', $plugin->getSettings('precision'));
-            $view->assign('round_func', $plugin->getSettings('round_func'));
+            $view->assign('bonus', shop_currency_html($bonus));
             $template_path = wa()->getDataPath('plugins/bonuses/templates/FrontendProduct.html', false, 'shop', true);
             if (!file_exists($template_path)) {
                 $template_path = wa()->getAppPath('plugins/bonuses/templates/FrontendProduct.html', 'shop');
@@ -106,32 +124,6 @@ class shopBonusesPlugin extends shopPlugin {
         }
         waSystem::popActivePlugin();
         return $html;
-    }
-
-    public static function getBonusByPrice($price = 0) {
-        $bonus = '';
-        $plugin = self::getThisPlugin();
-        if ($plugin->getSettings('status')) {
-            $bonus = $plugin->getBonus($price);
-            $currency = wa('shop')->getConfig()->getCurrency(false);
-            $bonus = shop_currency($bonus);
-        }
-        waSystem::popActivePlugin();
-        return $bonus;
-    }
-
-    public function frontendCategory($category) {
-        if ($this->getSettings('status') && $this->getSettings('frontend_category')) {
-            $currency = wa('shop')->getConfig()->getCurrency(false);
-            $currency_sign = wa()->getConfig()->getCurrencies($currency);
-            $view = wa()->getView();
-            $view->assign('currency_sign', $currency_sign[$currency]['sign']);
-            $view->assign('percent', $this->getSettings('percent'));
-            $view->assign('precision', $this->getSettings('precision'));
-            $view->assign('round_func', $this->getSettings('round_func'));
-            $html = $view->fetch('plugins/bonuses/templates/FrontendCategory.html');
-            return $html;
-        }
     }
 
     public function frontendCart() {
@@ -144,23 +136,42 @@ class shopBonusesPlugin extends shopPlugin {
         $html = '';
         $plugin = self::getThisPlugin();
         if ($plugin->getSettings('status')) {
-            $cart = new shopCart();
-            $items = $cart->items(false);
-            $bonus = 0;
-            foreach ($items as $item) {
-                $bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
-            }
-            $currency = wa('shop')->getConfig()->getCurrency(false);
+            $def_currency = wa('shop')->getConfig()->getCurrency(true);
+            $cur_currency = wa('shop')->getConfig()->getCurrency(false);
+            $session = wa()->getStorage();
+            $use_bonus = $session->read('use_bonus');
+            $contact_id = wa()->getUser()->getId();
+            $total_bonus = $plugin->getUnburnedBonus($contact_id);
+
             
-            $cart_bonuses = shop_currency_html($bonus);
+            $cart = new shopCart();
+            $total_order = shop_currency($cart->total(false), $cur_currency, $def_currency, false);
+            $bonus_discont = intval($plugin->getSettings('bonus_discont'));
+            if ($bonus_discont > 0 && $bonus_discont < 100) {
+                $bonus_discont_val = $total_order * $bonus_discont / 100;
+            } else {
+                $bonus_discont_val = $total_order;
+            }
+            $use_bonus = min($bonus_discont_val, $total_bonus, $use_bonus);
+            $use_bonus = round(shop_currency($use_bonus, null, null, false), 2);
+            
+            $total_order_bonus = 0;
+            $items = $cart->items(false);
+            foreach ($items as $item) {
+                $total_order_bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+            }
+            $discount = shop_currency($cart->discount(), $cur_currency, $def_currency, false);
+            $total_order_bonus -= $plugin->getBonus($discount);
+            
             $view = wa()->getView();
-            $view->assign('cart_bonuses', $cart_bonuses);
+            $view->assign('total_bonus', shop_currency_html($total_bonus));
+            $view->assign('use_bonus', $use_bonus);
+            $view->assign('cart_bonuses', shop_currency_html($total_order_bonus));
             $template_path = wa()->getDataPath('plugins/bonuses/templates/FrontendCart.html', false, 'shop', true);
             if (!file_exists($template_path)) {
                 $template_path = wa()->getAppPath('plugins/bonuses/templates/FrontendCart.html', 'shop');
             }
             $html = $view->fetch($template_path);
-            return $html;
         }
         waSystem::popActivePlugin();
         return $html;
@@ -191,39 +202,57 @@ class shopBonusesPlugin extends shopPlugin {
         return $html;
     }
 
+    protected function addBonusesOrder($order_id) {
+        $def_currency = wa('shop')->getConfig()->getCurrency(true);
+        $order_model = new shopOrderModel();
+        $order = $order_model->getOrder($order_id);
+        $bonus = 0;
+        foreach ($order['items'] as $item) {
+            $bonus += $this->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+        }
+        $discount = shop_currency($order['discount'], $order['currency'], $def_currency, false);
+        $bonus -= $this->getBonus($discount);
+        $bonus_model = new shopBonusesPluginModel();
+        if ($sb = $bonus_model->getByField('contact_id', $order['contact_id'])) {
+            $exist_bonus = $this->getUnburnedBonus($order['contact_id']);
+            $data = array(
+                'date' => waDateTime::date('Y-m-d H:i:s'),
+                'bonus' => $bonus + $exist_bonus,
+            );
+            $bonus_model->updateById($sb['id'], $data);
+        } else {
+            $data = array(
+                'contact_id' => $order['contact_id'],
+                'date' => waDateTime::date('Y-m-d H:i:s'),
+                'bonus' => $bonus,
+            );
+            $bonus_model->insert($data);
+        }
+    }
+
+    public function orderActionPay($params) {
+        if ($this->getSettings('status') && $this->getSettings('order_status') == 'pay') {
+            $this->addBonusesOrder($params['order_id']);
+        }
+    }
+
     public function orderActionComplete($params) {
-        if ($this->getSettings('status')) {
-            $order_model = new shopOrderModel();
-            $order = $order_model->getById($params['order_id']);
-            $total = $order['total'] - $order['shipping'];
-            $bonus = $this->getBonus($total);
-            $def_currency = wa('shop')->getConfig()->getCurrency(true);
-            $bonus = shop_currency($bonus, $order['currency'], $def_currency, false);
-            $bonus_model = new shopBonusesPluginModel();
-            if ($sb = $bonus_model->getByField('contact_id', $order['contact_id'])) {
-                $exist_bonus = $this->getUnburnedBonus($order['contact_id']);
-                $data = array(
-                    'date' => waDateTime::date('Y-m-d H:i:s'),
-                    'bonus' => $bonus + $exist_bonus,
-                );
-                $bonus_model->updateById($sb['id'], $data);
-            } else {
-                $data = array(
-                    'contact_id' => $order['contact_id'],
-                    'date' => waDateTime::date('Y-m-d H:i:s'),
-                    'bonus' => $bonus,
-                );
-                $bonus_model->insert($data);
-            }
+        if ($this->getSettings('status') && $this->getSettings('order_status') == 'complete') {
+            $this->addBonusesOrder($params['order_id']);
         }
     }
 
     public function orderActionRefund($params) {
         if ($this->getSettings('status')) {
+            $def_currency = wa('shop')->getConfig()->getCurrency(true);
             $order_model = new shopOrderModel();
-            $order = $order_model->getById($params['order_id']);
-            $total = $order['total'] - $order['shipping'];
-            $bonus = $this->getBonus($total);
+            $order = $order_model->getOrder($params['order_id']);
+            $bonus = 0;
+            foreach ($order['items'] as $item) {
+                $bonus += $this->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+            }
+            $discount = shop_currency($order['discount'], $order['currency'], $def_currency, false);
+            $bonus -= $this->getBonus($discount);
 
             $bonus_model = new shopBonusesPluginModel();
             if ($sb = $bonus_model->getByField('contact_id', $order['contact_id'])) {
@@ -238,23 +267,27 @@ class shopBonusesPlugin extends shopPlugin {
 
     public function orderCalculateDiscount($params) {
         if ($this->getSettings('status')) {
-            $total = $params['order']['total'];
             $contact_id = wa()->getUser()->getId();
-            if ($bonus = $this->getUnburnedBonus($contact_id)) {
-                $bonus = shop_currency($bonus, null, null, false);
+            $total_bonus = $this->getUnburnedBonus($contact_id);
+            if ($total_bonus) {
+                $total_bonus = shop_currency($total_bonus, null, null, false);
                 $bonus_discont = intval($this->getSettings('bonus_discont'));
+                $total = $params['order']['total'];
                 if ($bonus_discont > 0 && $bonus_discont < 100) {
                     $bonus_discont_val = $total * $bonus_discont / 100;
                 } else {
                     $bonus_discont_val = $total;
                 }
-                $use_bonus = min($bonus_discont_val, $bonus);
                 $session = wa()->getStorage();
-
+                $use_bonus = $session->read('use_bonus');
+                $use_bonus = shop_currency($use_bonus, null, null, false);
+                $use_bonus = min($total_bonus, $bonus_discont_val, $use_bonus);
                 $def_currency = wa('shop')->getConfig()->getCurrency(true);
                 $cur_currency = wa('shop')->getConfig()->getCurrency(false);
                 $session->write('use_bonus', shop_currency($use_bonus, $cur_currency, $def_currency, false));
                 return $use_bonus;
+            } else {
+                $session->remove('use_bonus');
             }
         }
     }

@@ -6,5 +6,6 @@
  */
 return array(
     'bonuses/cart/' => 'frontend/cart',
-    'bonuses/product/' => 'frontend/product'
+    'bonuses/product/' => 'frontend/product',
+    'bonuses/recalculate/' => 'frontend/recalculate',
 );

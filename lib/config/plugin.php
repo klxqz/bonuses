@@ -17,6 +17,7 @@ return array(
         'frontend_product' => 'frontendProduct',
         'frontend_category' => 'frontendCategory',
         'frontend_cart' => 'frontendCart',
+        'order_action.pay' => 'orderActionPay',
         'order_action.complete' => 'orderActionComplete',
         'frontend_my' => 'frontendMy',
         'order_calculate_discount' => 'orderCalculateDiscount',
