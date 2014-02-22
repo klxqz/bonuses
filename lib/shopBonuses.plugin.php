@@ -267,6 +267,7 @@ class shopBonusesPlugin extends shopPlugin {
 
     public function orderCalculateDiscount($params) {
         if ($this->getSettings('status')) {
+            $session = wa()->getStorage();
             $contact_id = wa()->getUser()->getId();
             $total_bonus = $this->getUnburnedBonus($contact_id);
             if ($total_bonus) {
@@ -278,7 +279,6 @@ class shopBonusesPlugin extends shopPlugin {
                 } else {
                     $bonus_discont_val = $total;
                 }
-                $session = wa()->getStorage();
                 $use_bonus = $session->read('use_bonus');
                 $use_bonus = shop_currency($use_bonus, null, null, false);
                 $use_bonus = min($total_bonus, $bonus_discont_val, $use_bonus);
