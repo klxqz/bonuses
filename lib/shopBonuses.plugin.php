@@ -189,7 +189,6 @@ class shopBonusesPlugin extends shopPlugin {
         if ($plugin->getSettings('status')) {
             $contact_id = wa()->getUser()->getId();
             $bonus = $plugin->getUnburnedBonus($contact_id);
-            $bonus = shop_currency($bonus);
             $view = wa()->getView();
             $view->assign('bonus', $bonus);
             $template_path = wa()->getDataPath('plugins/bonuses/templates/FrontendMy.html', false, 'shop', true);

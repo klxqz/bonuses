@@ -17,23 +17,20 @@ class shopBonusesPluginModel extends waModel {
         }
     }
 
-    public function getBonusesList() {
-        $sql = "SELECT `sb`.*, `wc`.`name`,`wc`.`last_datetime`,`wce`.`email` FROM `" . $this->table . "` as `sb`"
-                . " LEFT JOIN `wa_contact` as `wc` ON `sb`.`contact_id` = `wc`.`id`"
-                . " LEFT JOIN `wa_contact_emails` as `wce` ON `wc`.`id` = `wce`.`contact_id`";
+    public function getBonusesList($options = array()) {
+        $offset = isset($options['offset']) ? $options['offset'] : 0;
+        $limit = isset($options['limit']) ? $options['limit'] : 30;
+        $sql = "SELECT `sb`.*, `wc`.`name`,`wc`.`last_datetime` FROM `" . $this->table . "` as `sb`
+                LEFT JOIN `wa_contact` as `wc` ON `sb`.`contact_id` = `wc`.`id`
+                LIMIT $offset,$limit";
         $result = $this->query($sql)->fetchAll();
         return $result;
     }
-
-    public function deleteIds($ids = array()) {
-        if (!$ids) {
-            return false;
-        }
-        foreach ($ids as &$id) {
-            $id = $this->escape($id);
-        }
-        $sql = "DELETE FROM {$this->table} WHERE id IN(" . implode(',', $ids) . ")";
-        return $this->query($sql);
+    
+    public function count() {
+        $sql = "SELECT COUNT(*) as `count` FROM `" . $this->table . "`";
+        $result = $this->query($sql)->fetch();
+        return $result['count'];
     }
 
 }

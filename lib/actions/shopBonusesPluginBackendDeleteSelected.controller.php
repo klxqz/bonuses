@@ -7,9 +7,9 @@
 class shopBonusesPluginBackendDeleteSelectedController extends waJsonController {
 
     public function execute() {
-        $bonuses_ids = (array)waRequest::post('bonuses_ids');
+        $bonuses_ids = (array) waRequest::post('bonuses_ids');
         $bonuses_model = new shopBonusesPluginModel();
-        $bonuses_model->deleteIds($bonuses_ids);
+        $bonuses_model->deleteByField('id', $bonuses_ids);
     }
 
 }

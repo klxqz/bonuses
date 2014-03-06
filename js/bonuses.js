@@ -233,6 +233,52 @@
                 $.bonuses.initAddHandler();
             });
         },
+        initLazyLoad: function(options) {
+
+            var count = options.count;
+            var offset = count;
+            var total_count = options.total_count;
+            var url = options.url || '?plugin=bonuses&action=bonuses';
+            var target = $(options.target || '#bonuses-list');
+
+            $(window).lazyLoad('stop');  // stop previous lazy-load implementation
+
+            if (offset < total_count) {
+                $(window).lazyLoad({
+                    container: target,
+                    state: (typeof options.auto === 'undefined' ? true : options.auto) ? 'wake' : 'stop',
+                    load: function() {
+                        $(window).lazyLoad('sleep');
+                        $('.lazyloading-link').hide();
+                        $('.lazyloading-progress').show();
+                        $.get(
+                                url + '&lazy=1&offset=' + offset + '&total_count=' + total_count,
+                                function(html) {
+                                    var data = $('<div></div>').html(html);
+                                    var children = data.find('#bonuses-list').children();
+                                    offset += count;
+                                    target.append(children);
+                                    $('.lazyloading-progress-string').replaceWith(data.find('.lazyloading-progress-string'));
+                                    $('.lazyloading-progress').replaceWith(data.find('.lazyloading-progress'));
+                                    if (offset >= total_count) {
+                                        $(window).lazyLoad('stop');
+                                        $('.lazyloading-link').hide();
+                                    } else {
+                                        $('.lazyloading-link').show();
+                                        $(window).lazyLoad('wake');
+                                    }
+                                    data.remove();
+                                },
+                                "html"
+                                );
+                    }
+                });
+                $('.lazyloading-link').unbind('click').bind('click', function() {
+                    $(window).lazyLoad('force');
+                    return false;
+                });
+            }
+        },
         initAddHandler: function() {
             var autocompete_input = $("#customer-autocomplete");
             autocompete_input.autocomplete({
