@@ -28,8 +28,8 @@ class shopBonusesPlugin extends shopPlugin {
                     <div class="name">Использовать индивидуальные настройки бонусов для товара</div>
                     <div class="value no-shift">
                         <select name="product[use_bonus]">
-                            <option ' . ($product->use_bonus == '1' ? 'selected="selected"' : '') . ' value="1">Да</option>
                             <option ' . ($product->use_bonus == '0' ? 'selected="selected"' : '') . ' value="0">Нет</option>
+                            <option ' . ($product->use_bonus == '1' ? 'selected="selected"' : '') . ' value="1">Да</option>
                         </select>
                     </div>
                 </div>
@@ -143,7 +143,7 @@ class shopBonusesPlugin extends shopPlugin {
             $contact_id = wa()->getUser()->getId();
             $total_bonus = $plugin->getUnburnedBonus($contact_id);
 
-            
+
             $cart = new shopCart();
             $total_order = shop_currency($cart->total(false), $cur_currency, $def_currency, false);
             $bonus_discont = intval($plugin->getSettings('bonus_discont'));
@@ -154,15 +154,18 @@ class shopBonusesPlugin extends shopPlugin {
             }
             $use_bonus = min($bonus_discont_val, $total_bonus, $use_bonus);
             $use_bonus = round(shop_currency($use_bonus, null, null, false), 2);
-            
+
             $total_order_bonus = 0;
             $items = $cart->items(false);
+            print_r($items);
             foreach ($items as $item) {
-                $total_order_bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+                if (!empty($item['product'])) {
+                    $total_order_bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+                }
             }
             $discount = shop_currency($cart->discount(), $cur_currency, $def_currency, false);
             $total_order_bonus -= $plugin->getBonus($discount);
-            
+
             $view = wa()->getView();
             $view->assign('total_bonus', shop_currency_html($total_bonus));
             $view->assign('use_bonus', $use_bonus);

@@ -12,7 +12,9 @@ class shopBonusesPluginFrontendCartController extends waJsonController {
         $items = $cart->items(false);
         $bonus = 0;
         foreach ($items as $item) {
-            $bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+            if (!empty($item['product'])) {
+                $bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+            }
         }
         $cart_bonuses = shop_currency_html($bonus);
         $this->response['cart_bonuses'] = $cart_bonuses;
