@@ -9,7 +9,7 @@ return array(
     'description' => 'Начисление бонусов за совершение покупок',
     'img' => 'img/bonuses.png',
     'vendor' => '985310',
-    'version' => '1.0.4',
+    'version' => '1.0.5',
     'rights' => false,
     'frontend' => true,
     'shop_settings' => true,

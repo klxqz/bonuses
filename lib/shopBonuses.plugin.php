@@ -157,7 +157,6 @@ class shopBonusesPlugin extends shopPlugin {
 
             $total_order_bonus = 0;
             $items = $cart->items(false);
-            print_r($items);
             foreach ($items as $item) {
                 if (!empty($item['product'])) {
                     $total_order_bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
