@@ -209,7 +209,9 @@ class shopBonusesPlugin extends shopPlugin {
         $order = $order_model->getOrder($order_id);
         $bonus = 0;
         foreach ($order['items'] as $item) {
-            $bonus += $this->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+            if ($item['type'] == 'product') {
+                $bonus += $this->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+            }
         }
         $discount = shop_currency($order['discount'], $order['currency'], $def_currency, false);
         $bonus -= $this->getBonus($discount);
@@ -250,7 +252,9 @@ class shopBonusesPlugin extends shopPlugin {
             $order = $order_model->getOrder($params['order_id']);
             $bonus = 0;
             foreach ($order['items'] as $item) {
-                $bonus += $this->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+                if ($item['type'] == 'product') {
+                    $bonus += $this->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
+                }
             }
             $discount = shop_currency($order['discount'], $order['currency'], $def_currency, false);
             $bonus -= $this->getBonus($discount);

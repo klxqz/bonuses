@@ -132,7 +132,7 @@
         },
         initButtons: function() {
             var _csrf = $('input[name="_csrf"]').val();
-            $('#bonuses-list .edit').click(function() {
+            $('#bonuses-list').on('click', '.edit', function() {
                 var $tr = $(this).closest('tr');
                 $tr.find('.date_text').hide();
                 $tr.find('.date_input').show();
@@ -144,7 +144,7 @@
                 $tr.find('.save').show();
 
             });
-            $('#bonuses-list .cancel').click(function() {
+            $('#bonuses-list').on('click', '.cancel', function() {
                 var $tr = $(this).closest('tr');
                 $tr.find('.date_text').show();
                 $tr.find('.date_input').hide();
@@ -156,7 +156,7 @@
                 $tr.find('.save').hide();
             });
 
-            $('#bonuses-list .save').click(function() {
+            $('#bonuses-list').on('click', '.save', function() {
                 var $tr = $(this).closest('tr');
                 $tr.find('i.loading').css('display', 'inline-block');
                 $tr.find('.cancel').hide();
@@ -184,7 +184,7 @@
                 });
 
             });
-            $('#bonuses-list .delete').click(function() {
+            $('#bonuses-list').on('click', '.delete', function() {
                 if (!confirm('Вы уверены')) {
                     return false;
                 }
