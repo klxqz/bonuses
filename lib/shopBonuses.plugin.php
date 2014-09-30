@@ -164,6 +164,9 @@ class shopBonusesPlugin extends shopPlugin {
             }
             $discount = shop_currency($cart->discount(), $cur_currency, $def_currency, false);
             $total_order_bonus -= $plugin->getBonus($discount);
+            if ($total_order_bonus < 0) {
+                $total_order_bonus = 0;
+            }
 
             $view = wa()->getView();
             $view->assign('total_bonus', shop_currency_html($total_bonus));

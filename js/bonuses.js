@@ -142,6 +142,7 @@
                 $tr.find('.delete').hide();
                 $tr.find('.cancel').show();
                 $tr.find('.save').show();
+                return false;
 
             });
             $('#bonuses-list').on('click', '.cancel', function() {
@@ -154,6 +155,7 @@
                 $tr.find('.delete').show();
                 $tr.find('.cancel').hide();
                 $tr.find('.save').hide();
+                return false;
             });
 
             $('#bonuses-list').on('click', '.save', function() {
@@ -182,7 +184,7 @@
                         $tr.find('i.loading').hide();
                     }
                 });
-
+                return false;
             });
             $('#bonuses-list').on('click', '.delete', function() {
                 if (!confirm('Вы уверены')) {
@@ -208,7 +210,7 @@
                         }
                     }
                 });
-
+                return false;
             });
             $('.delete-selected-but').click(function() {
                 var $form = $('.bonuses-form');
@@ -225,6 +227,7 @@
                     error: function(jqXHR, errorText) {
                     }
                 });
+                return false;
             });
 
         },
