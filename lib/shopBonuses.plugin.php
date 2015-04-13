@@ -67,15 +67,24 @@ class shopBonusesPlugin extends shopPlugin {
         }
     }
 
-    public function getProductBonus($product_id, $sku_id = null) {
+    public function getProductBonus($product_id, $sku_id = null, $features = null) {
         $product_model = new shopProductModel();
         $product = $product_model->getById($product_id);
         $sku_model = new shopProductSkusModel();
+        $product_features_model = new shopProductFeaturesModel();
 
+        if(!$sku_id) {
+            $sku_id = $product_features_model->getSkuByFeatures($product_id, $features);
+        }
+        
+        
+    
         if ($product['use_bonus']) {
             if ($product['bonus_type'] == 'absolute') {
                 return $product['bonus_val'];
             } elseif ($product['bonus_type'] == 'percent') {
+                
+                
                 if (!$sku_id) {
                     return $this->getBonus($product['price'], $product['bonus_val']);
                 } else {
