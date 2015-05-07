@@ -67,7 +67,7 @@ class shopBonusesPlugin extends shopPlugin {
         }
     }
 
-    public function getProductBonus($product_id, $sku_id = null, $features = null) {
+    public function getProductBonus($product_id, $sku_id = null, $features = array()) {
         $product_model = new shopProductModel();
         $product = $product_model->getById($product_id);
         $sku_model = new shopProductSkusModel();
