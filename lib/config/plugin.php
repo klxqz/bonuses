@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @author Коробов Николай wa-plugins.ru <support@wa-plugins.ru>
+ * @author wa-plugins.ru <support@wa-plugins.ru>
  * @link http://wa-plugins.ru/
  */
 return array(
@@ -9,7 +9,7 @@ return array(
     'description' => 'Начисление бонусов за совершение покупок',
     'img' => 'img/bonuses.png',
     'vendor' => '985310',
-    'version' => '1.0.9',
+    'version' => '1.1.0',
     'rights' => false,
     'frontend' => true,
     'shop_settings' => true,
@@ -19,11 +19,12 @@ return array(
         'frontend_cart' => 'frontendCart',
         'order_action.pay' => 'orderActionPay',
         'order_action.complete' => 'orderActionComplete',
-        'frontend_my' => 'frontendMy',
+        'frontend_my_orders' => 'frontendMyOrders',
         'order_calculate_discount' => 'orderCalculateDiscount',
         'order_action.create' => 'orderActionCreate',
         'order_action.refund' => 'orderActionRefund',
         'backend_menu' => 'backendMenu',
         'backend_product_edit' => 'backendProductEdit',
+        'backend_order_edit' => 'backendOrderEdit',
     )
 );

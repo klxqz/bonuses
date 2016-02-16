@@ -1,0 +1,163 @@
+<script type="text/javascript">
+    $(function () {
+        function updateTotal() {
+            var ajax = ajax === undefined ? true : ajax;
+            var container = $.order_edit.container;
+            /*
+            if (!container.find('.s-order-item').length) {
+                $("#subtotal").text(0);
+                $("#total").text(0);
+                return;
+            }*/
+            var subtotal = 0;
+            var $discount_input = $('#discount');
+
+            // Data for orderTotal controller
+            var data = {};
+            var customer = $("#s-order-edit-customer").find('[name^="customer["]').serializeArray();
+            for (var i = 0; i < customer.length; i++) {
+                data[customer[i].name] = customer[i].value;
+            }
+            data.items = [];
+
+            container.find('.s-order-item').each(function () {
+                var tr = $(this);
+                var product_id = tr.find('input[name^="product"]').val();
+                var services = [];
+                var price = $.order_edit.parseFloat(tr.find('.s-orders-product-price input').val());
+                var quantity = $.order_edit.parseFloat(tr.find('input.s-orders-quantity').val());
+
+                subtotal += price * quantity;
+
+                if (tr.find('.s-orders-services').length) {
+                    tr.find('.s-orders-services input:checkbox:checked').each(function () {
+                        var li = $(this).closest('li');
+                        var service_price = $.order_edit.parseFloat(li.find('input.s-orders-service-price').val());
+
+                        services.push({
+                            id: $(this).val(),
+                            price: service_price
+                        });
+
+                        subtotal += service_price * quantity;
+
+                    });
+                }
+
+                // get SKU id
+                var sku_input = tr.find('input[name^=sku]:not(:radio)').add(tr.find('input[name^=sku]:checked')).first();
+                var sku_id = sku_input.val() || 0;
+
+                data.items.push({
+                    product_id: product_id,
+                    quantity: quantity,
+                    price: price,
+                    sku_id: sku_id,
+                    services: services
+                });
+            });
+            data.subtotal = subtotal;
+            var discount = $.order_edit.parseFloat($discount_input.val() || 0);
+            data.discount = discount;
+            if ($.order_edit.id) {
+                data.order_id = $.order_edit.id;
+            } else {
+                data['currency'] = $('#order-edit-form input[name=currency]').val();
+            }
+            data['shipping_id'] = ($('#shipping_methods').val() || '').split('.')[0];
+            data['customer[id]'] = $('#s-customer-id').val();
+
+            if (ajax) {
+
+                // Fetch shipping options and rates, and other info from orderTotal controller
+
+                $('#bonus').before('<i class="icon16 loading"></i>')
+                $.post('?plugin=bonuses&action=editOrder', data, function (response) {
+                    if (response.status == 'ok') {
+                        $('#total-bonus').html(response.data.total_bonus);
+                        $('#bonus').html(response.data.bonus);
+                        $('#bonus').closest('td').find('.loading').hide();
+                    }
+                }, 'json');
+            }
+
+        }
+
+        $('#order-items tfoot tr').eq(-4).after('<tr class="white">' + $('#use-bonus-tr').html() + '</tr>');
+        $('#order-items tfoot tr').eq(-2).after('<tr class="white large">' + $('#bonus-tr').html() + '</tr>');
+
+        $('#order-edit-form').on('order_total_updated', function (e, data) {
+            updateTotal();
+        });
+        var customer_id = $('input[name="customer_id"]').val();
+        setInterval(function () {
+            if (customer_id != $('input[name="customer_id"]').val()) {
+                updateTotal();
+                customer_id = $('input[name="customer_id"]').val();
+            }   
+        }, 500);
+        
+        $('#discount').change(function(){
+            updateTotal();
+            return false;
+        });
+
+        $('.recalculate_bonus').click(function () {
+            var self = $(this);
+            self.before('<i id="loading-recalculate" class="loading icon16"></i>').hide();
+            $.ajax({
+                type: 'POST',
+                url: '?plugin=bonuses&action=recalculate',
+                dataType: 'json',
+                data: {
+                    use_bonus: $('#use-bonus').val(),
+                    customer_id: $('#s-customer-id').val()
+                },
+                success: function (data, textStatus, jqXHR) {
+                    self.show();
+                    $('#loading-recalculate').remove();
+                    if (data.status == 'ok') {
+                        $('#use-bonus').val(data.data.use_bonus);
+                        $.order_edit.updateTotal();
+                    } else if (data.status == 'fail') {
+                        alert(data.errors);
+                    }
+                }
+            });
+            return false;
+        });
+
+    });
+</script>
+
+<div style="display: none;">
+    <table>
+        <tbody>
+            <tr id="use-bonus-tr"  class="white">
+                <td class="min-width"></td>
+                <td colspan="3" class="align-right">
+                    <span>Использовать бонусы</span><br/>
+
+                    <em class="hint">Вы можете использовать бонусные баллы для получения скидки. Доступно бонусов: <span class="large bold" id="total-bonus">0</span></em>
+                </td>
+                <td class="align-right nowrap">
+                    &minus; <input type="text" name="use_bonus" id="use-bonus" class="numerical short">
+                    <span class="currency">{$currency}</span>
+                </td>
+                <td><a class="recalculate_bonus" href="#"><i class="icon16 update"></i></a></td>
+            </tr>
+            <tr id="bonus-tr"  class="white large">
+                <td class="min-width"></td>
+                <td colspan="3" class="align-right">
+                    <span class="large">Начисляемые бонусы</span><br/>
+                    <em class="hint">За эту покупку вам будет начислено бонусов</em>
+                </td>
+                <td class="align-right large bold nowrap">
+                    <span id="bonus">0</span>
+                    <span class="currency">{$currency}</span>
+                </td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+</div>

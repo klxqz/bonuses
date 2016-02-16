@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @author Коробов Николай wa-plugins.ru <support@wa-plugins.ru>
+ * @author wa-plugins.ru <support@wa-plugins.ru>
  * @link http://wa-plugins.ru/
  */
 class shopBonusesPlugin extends shopPlugin {
@@ -15,7 +15,7 @@ class shopBonusesPlugin extends shopPlugin {
         }
     }
 
-    protected static function getThisPlugin() {
+    public static function getThisPlugin() {
         if (self::$plugin) {
             return self::$plugin;
         } else {
@@ -23,8 +23,20 @@ class shopBonusesPlugin extends shopPlugin {
         }
     }
 
+    public function backendOrderEdit($order) {
+        if ($this->getSettings('status')) {
+            $view = wa()->getView();
+            $currency = wa('shop')->getConfig()->getCurrency(true);
+            $view->assign('currency', $currency);
+            $template_path = $template_path = wa()->getAppPath('plugins/bonuses/templates/BackendOrderEdit.html', 'shop');
+            $html = $view->fetch($template_path);
+            return $html;
+        }
+    }
+
     public function backendProductEdit($product) {
-        $html = '<div class="field">
+        if ($this->getSettings('status')) {
+            $html = '<div class="field">
                     <div class="name">Использовать индивидуальные настройки бонусов для товара</div>
                     <div class="value no-shift">
                         <select name="product[use_bonus]">
@@ -48,7 +60,8 @@ class shopBonusesPlugin extends shopPlugin {
                         </select>
                     </div>
                 </div>';
-        return array('basics' => $html);
+            return array('basics' => $html);
+        }
     }
 
     public function backendMenu() {
@@ -73,18 +86,16 @@ class shopBonusesPlugin extends shopPlugin {
         $sku_model = new shopProductSkusModel();
         $product_features_model = new shopProductFeaturesModel();
 
-        if(!$sku_id) {
+        if (!$sku_id) {
             $sku_id = $product_features_model->getSkuByFeatures($product_id, $features);
         }
-        
-        
-    
+
         if ($product['use_bonus']) {
             if ($product['bonus_type'] == 'absolute') {
                 return $product['bonus_val'];
             } elseif ($product['bonus_type'] == 'percent') {
-                
-                
+
+
                 if (!$sku_id) {
                     return $this->getBonus($product['price'], $product['bonus_val']);
                 } else {
@@ -191,7 +202,7 @@ class shopBonusesPlugin extends shopPlugin {
         return $html;
     }
 
-    public function frontendMy() {
+    public function frontendMyOrders() {
         if ($this->getSettings('frontend_my')) {
             return self::displayFrontendMy();
         }
@@ -285,7 +296,12 @@ class shopBonusesPlugin extends shopPlugin {
     public function orderCalculateDiscount($params) {
         if ($this->getSettings('status')) {
             $session = wa()->getStorage();
-            $contact_id = wa()->getUser()->getId();
+            $backend = (wa()->getEnv() == 'backend');
+            if ($backend) {
+                $contact_id = $session->read('bonus_customer_id');
+            } else {
+                $contact_id = wa()->getUser()->getId();
+            }
             $total_bonus = $this->getUnburnedBonus($contact_id);
             if ($total_bonus) {
                 $total_bonus = shop_currency($total_bonus, null, null, false);
@@ -305,6 +321,7 @@ class shopBonusesPlugin extends shopPlugin {
                 return $use_bonus;
             } else {
                 $session->remove('use_bonus');
+                $session->remove('bonus_customer_id');
             }
         }
     }
@@ -314,10 +331,17 @@ class shopBonusesPlugin extends shopPlugin {
             $session = wa()->getStorage();
             $use_bonus = $session->read('use_bonus');
             if ($use_bonus) {
-                $contact_id = wa()->getUser()->getId();
+                $backend = (wa()->getEnv() == 'backend');
+                if ($backend) {
+                    $contact_id = $session->read('bonus_customer_id');
+                } else {
+                    $contact_id = wa()->getUser()->getId();
+                }
                 $bonus_model = new shopBonusesPluginModel();
                 $sb = $bonus_model->getByField('contact_id', $contact_id);
                 $bonus_model->updateById($sb['id'], array('bonus' => $sb['bonus'] - $use_bonus));
+                $session->remove('use_bonus');
+                $session->remove('bonus_customer_id');
             }
         }
     }
