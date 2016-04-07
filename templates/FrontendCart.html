@@ -1,40 +1,75 @@
-<script>
-    $(function() {
-        var cart_total = $('.cart-total').html();
-        setInterval(function() {
-            if (cart_total != $('.cart-total').html()) {
+<div class="bonuses-frontend-cart">
+    <div class="total-bonus">У Вас {$total_bonus} бонусов.</div>
+    <div class="bonus-form">
+        <label>Использовано бонусов:</label> <input autocomplete="off" type="text" name="bonuses_use" value="{$bonuses_use}" />
+        <input class="recalculate-bonus" type="submit" value="Пересчитать" />
+    </div>
+    <span class="accrued-bonuses">За эту покупку вам будет начислено бонусов: <span class="bonus-val"><i class="icon16 loading"></i></span></span>
+</div>
+{if !empty($settings.cart_tooltip)}
+    <link rel="stylesheet" href="{$wa_app_static_url}plugins/bonuses/js/webui-popover/jquery.webui-popover.min.css"  media="all"/>
+    <script type="text/javascript" src="{$wa_app_static_url}plugins/bonuses/js/webui-popover/jquery.webui-popover.min.js"></script> 
+{/if}
+<script type="text/javascript">
+    (function () {
+        $(document).ready(function () {
+            var tooltip = {$settings.cart_tooltip|default:0};
+            var settings = {
+                animation: 'pop',
+                title: '{$settings.cart_tooltip_title|default:''|escape}',
+                trigger: 'click',
+                multi: false,
+                closeable: false,
+                delay: 300,
+                padding: true
+            };
+            var form = $('input[name="checkout"]').closest('form');
+            form.change(function () {
+                $('.bonus-val').html('<i class="icon16 loading"></i>');
+                setTimeout(function () {
+                    $.ajax({
+                        type: 'POST',
+                        url: '{$wa_app_url}bonuses/cart/',
+                        dataType: 'json',
+                        data: form.serialize(),
+                        success: function (data, textStatus, jqXHR) {
+                            if (data.status == 'ok') {
+                                $('.bonus-val').html(data.data.bonus);
+                                if (tooltip) {
+                                    settings.content = data.data.tooltip_text;
+                                    $('.accrued-bonuses').webuiPopover('destroy').webuiPopover(settings);
+                                }
+                            } else {
+                                console.log(data.errors.join(', '));
+                            }
+                        },
+                        error: function (jqXHR, errorText) {
+                            console.log(jqXHR.responseText);
+                        }
+                    });
+                }, 500);
+            }).change();
+            $('.recalculate-bonus').click(function () {
                 $.ajax({
                     type: 'POST',
-                    url: '{$wa_app_url}bonuses/cart/',
+                    url: '{$wa_app_url}bonuses/recalculate/',
                     dataType: 'json',
-                    success: function(data, textStatus, jqXHR) {
-                        $('.bonus_val').html(data.data.cart_bonuses);
+                    data: {
+                        bonuses_use: $('input[name="bonuses_use"]').val()
+                    },
+                    success: function (data, textStatus, jqXHR) {
+                        if (data.status == 'ok') {
+                            location.reload();
+                        } else {
+                            alert(data.errors.join(', '));
+                        }
+                    },
+                    error: function (jqXHR, errorText) {
+                        alert(jqXHR.responseText);
                     }
                 });
-                cart_total = $('.cart-total').html();
-            }
-        }, 500);
-        $('.recalculate_bonus').click(function() {
-            $.ajax({
-                type: 'POST',
-                url: '{$wa_app_url}bonuses/recalculate/',
-                dataType: 'json',
-                data: {
-                    use_bonus: $('input[name="use_bonus"]').val()
-                },
-                success: function(data, textStatus, jqXHR) {
-                    location.reload();
-                }
+                return false;
             });
-            return false;
         });
-    });
+    })();
 </script>
-
-<div class="total_bonus">У Вас {$total_bonus} бонусов.</div>
-<div>
-    Использовать бонусов: <input type="text" name="use_bonus" value="{$use_bonus}" >
-    <a class="recalculate_bonus" href="#">Пересчитать</a>
-</div>
-
-<div class="cart_bonuses">За эту покупку вам будет начислено бонусов: <span class="bonus_val">{$cart_bonuses}</span></div>

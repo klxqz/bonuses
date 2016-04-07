@@ -9,7 +9,6 @@ class shopBonusesPluginSettingsAction extends waViewAction {
     protected $templates = array(
         'FrontendProduct' => array('name' => 'Шаблон для вывода в карточке товара', 'tpl_path' => 'plugins/bonuses/templates/FrontendProduct.html'),
         'FrontendCart' => array('name' => 'Шаблон для вывода в корзине', 'tpl_path' => 'plugins/bonuses/templates/FrontendCart.html'),
-        'FrontendMy' => array('name' => 'Шаблон для вывода в личном кабинете', 'tpl_path' => 'plugins/bonuses/templates/FrontendMy.html'),
     );
     protected $plugin_id = array('shop', 'bonuses');
 
@@ -27,6 +26,8 @@ class shopBonusesPluginSettingsAction extends waViewAction {
             $template['template'] = file_get_contents($template['full_path']);
         }
 
+        $cron_str = 'php ' . wa()->getConfig()->getRootPath() . '/cli.php shop BonusesPluginBurn';
+        $this->view->assign('cron_str', $cron_str);
         $this->view->assign('settings', $settings);
         $this->view->assign('templates', $this->templates);
     }

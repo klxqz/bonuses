@@ -1,26 +1,48 @@
-<span class="frontend_product_bonus">
-    <span class="title">Бонус:</span>
-    <span class="bonus_val">{$bonus}</span>
+<span class="bonuses-frontend-product">
+    <span class="bonus-title">Бонусы:</span>
+    <span class="bonus-val"><i class="icon16 loading"></i></span>
 </span>
-
-<script>
-    $(function() {
-        var last_price = null;
-
-        setInterval(function () {
-            var price = $('.add2cart .price').text();
-            if (last_price != price) {
-                last_price = price;
+{if !empty($settings.product_tooltip)}
+    <link rel="stylesheet" href="{$wa_app_static_url}plugins/bonuses/js/webui-popover/jquery.webui-popover.min.css"  media="all"/>
+    <script type="text/javascript" src="{$wa_app_static_url}plugins/bonuses/js/webui-popover/jquery.webui-popover.min.js"></script> 
+{/if}
+<script type="text/javascript">
+    (function () {
+        $(document).ready(function () {
+            var tooltip = {$settings.product_tooltip|default:0};
+            var settings = {
+                animation: 'pop',
+                title: '{$settings.product_tooltip_title|default:''|escape}',
+                trigger: 'click',
+                multi: false,
+                closeable: false,
+                delay: 300,
+                padding: true
+            };
+            $('{$settings.product_form_selector}').change(function () {
+                var form = $(this);
+                $('.bonus-val').html('<i class="icon16 loading"></i>');
                 $.ajax({
                     type: 'POST',
                     url: '{$wa_app_url}bonuses/product/',
                     dataType: 'json',
-                    data: $('#cart-form').serialize(),
-                    success: function(data, textStatus, jqXHR) {
-                        $('.bonus_val').html(data.data.bonus);
+                    data: form.serialize(),
+                    success: function (data, textStatus, jqXHR) {
+                        if (data.status == 'ok') {
+                            $('.bonus-val').html(data.data.bonus);
+                            if (tooltip) {
+                                settings.content = data.data.tooltip_text;
+                                $('.bonuses-frontend-product').webuiPopover('destroy').webuiPopover(settings);
+                            }
+                        } else {
+                            console.log(data.errors.join(', '));
+                        }
+                    },
+                    error: function (jqXHR, errorText) {
+                        console.log(jqXHR.responseText);
                     }
                 });
-            }
-        }, 500);
-    });
+            }).change();
+        });
+    })();
 </script>

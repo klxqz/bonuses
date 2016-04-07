@@ -7,34 +7,78 @@
         overflow-y: hidden;
         overflow-x: auto;
     }
+    .plugin-menu{
+        float: right;
+        list-style: none;
+    }
+    .plugin-menu li{
+        float: left;
+        margin-left: 10px;
+    }
+    .plugin-menu li a{
+        text-decoration: underline;
+    }
+    div.geshifilter {
+        background-color: #f8f8f8;
+        border: 1px solid #ccc;
+        color: #222;
+        display: block;
+        line-height: 1.3;
+        margin: 0.5em;
+        overflow: auto;
+        padding: 0.5em;
+    }
+    .plugin-links{
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+    .plugin-links li{
+        margin: 5px 0;
+        font-weight: bold;
+    }
 </style>
-<h1>Бонусы</h1>
+<h1>Бонусы за покупку</h1>
+
+<ul class="plugin-menu">
+    <li><a href="mailto:support@wa-plugins.ru"><i class="icon16 ss pt hammer"></i>Поддержка</a></li>
+</ul>
+
 <div class="fields form">
     <form action="?plugin=bonuses&action=saveSettings" method="post" id="plugins-settings-form">
         {$wa->csrf()}
-
-
-        {literal}
-            <p>{shopBonusesPlugin::displayFrontendProduct($product)} - код хелпера для вывода бонусов в карточке товара, $product - переменная товара</p>
-            <p>{shopBonusesPlugin::displayFrontendCart()} - код хелпера для вывода бонусов в корзине</p>
-            <p>{shopBonusesPlugin::displayFrontendMy()} - код хелпера для вывода бонусов в личном кабинете</p>
-            <p>{shopBonusesPlugin::getBonusByProduct($product)} - код хелпера для получения бонусов, $product - переменная товара</p>
-
-        {/literal}
 
         <div class="field-group">
             <div class="field">
                 <div class="name">
                     Статус плагина
                 </div>
-                <div class="value">
-                    <select name="shop_bonuses[status]">
-                        <option {if $settings.status == 1} selected="selected"{/if} value="1">Включен</option>
-                        <option {if $settings.status == 0} selected="selected"{/if} value="0">Выключен</option>
-                    </select>
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[status]" value="0">
+                    <input type="checkbox" id="ibutton-status" name="shop_bonuses[status]" value="1"{if $settings.status} checked{/if}>
                 </div>
             </div>
+        </div>
 
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>
+            <div class="field">
+                <div class="name">Команда для запуска через CRON</div>
+                <div class="value">
+                    <strong>{$cron_str|default:''}</strong> 
+                    <p class="hint">Команда для запуска сгорания бонусов по рассписанию, через планировщик задач CRON</p>
+                </div>
+            </div>
+            {*
+            <div class="field">
+            <div class="name">
+            Бонусный счет
+            </div>
+            <div class="value">
+            <input type="radio" name="shop_bonuses[account]" value="standart" checked="checked"/> - бонусы начисляются на счет стандартной бонусной системы<br/>
+            <input type="radio" name="shop_bonuses[account]" value="" disabled="disabled"/> - <span class="grey">бонусы начисляются на независимый счет (в разработке)</span>
+            </div>
+            </div>
+            *}
             <div class="field">
                 <div class="name">
                     Процент(%)
@@ -71,15 +115,12 @@
                 <div class="name">
                     Сгорание бонусов
                 </div>
-                <div class="value">
-                    <select name="shop_bonuses[burn_bonus]">
-                        <option {if $settings.burn_bonus == '0'} selected="selected"{/if} value="0">Выключен</option>
-                        <option {if $settings.burn_bonus == '1'} selected="selected"{/if} value="1">Включен</option>
-                    </select>
-                    <p class="hint">Накопленные бонусы сгорают после N дней, если в течение этих дней покупатель не успел их потратить</p>
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[burn_bonus]" value="0">
+                    <input{if $settings.burn_bonus} checked="checked"{/if} type="checkbox" class="ibutton" data-ibutton-field=".burn-days-field" name="shop_bonuses[burn_bonus]" value="1">
                 </div>
             </div>
-            <div class="field">
+            <div class="field burn-days-field"{if !$settings.burn_bonus} style="display:none;"{/if}>
                 <div class="name">
                     Количество дней
                 </div>
@@ -113,56 +154,127 @@
                 <div class="name">
                     Начислять бонусы на услуги
                 </div>
-                <div class="value">
-                    <input type="hidden" name="shop_bonuses[bonus_service]" value="0" />
-                    <input type="checkbox" name="shop_bonuses[bonus_service]" value="1" {if $settings.bonus_service|default:0}checked="checked"{/if}  />
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[bonus_service]" value="0">
+                    <input{if $settings.bonus_service} checked="checked"{/if} type="checkbox" class="ibutton" name="shop_bonuses[bonus_service]" value="1">
                     <p class="hint">Бонусы будут начисляться не только на товары, но и на сопутствующие услуги</p>
                 </div>
             </div>
-
         </div>
 
-        <div class="field-group">
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>
+            <h2 class="grey">Страница товара</h2>
             <div class="field">
                 <div class="name">
-                    Стандартный вывод бонусов на странице товара
+                    Селектор формы товара
                 </div>
                 <div class="value">
-                    <select name="shop_bonuses[frontend_product]">
-                        <option {if $settings.frontend_product == 0} selected="selected"{/if} value="0">Выключен</option>
-                        <option {if $settings.frontend_product == 1} selected="selected"{/if} value="1">Включен</option>
-                    </select>
-                    <p class="hint">Вы можете отключить стандартный вывод и использовать хелпер вывода {ldelim}shopBonusesPlugin::displayFrontendProduct($product){rdelim}, чтобы организовать вывод в произвольном месте</p>
+                    <input type="text" name="shop_bonuses[product_form_selector]" value="{$settings.product_form_selector|default:''|escape}" />
+                    <p class="hint">Селектор формы товара используется для пересчета бонусов</p>
                 </div>
             </div>
+
+            <div class="field">
+                <div class="name">
+                    Всплывающая подсказка
+                </div>
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[product_tooltip]" value="0">
+                    <input{if $settings.product_tooltip|default:'1'} checked="checked"{/if} type="checkbox" class="ibutton" data-ibutton-field=".product-tooltip-field" name="shop_bonuses[product_tooltip]" value="1">
+                    <p class="hint">При клике на бонусы показывать подсказку</p>
+                </div>
+            </div>
+            <div class="field product-tooltip-field"{if !$settings.product_tooltip|default:'1'} style="display: none;"{/if}>
+                <div class="name">
+                    Заголовок подсказки
+                </div>
+                <div class="value">
+                    <input type="text" name="shop_bonuses[product_tooltip_title]" value="{$settings.product_tooltip_title|default:'Бонусы за покупку'|escape}" />
+                </div>
+            </div>
+            <div class="field product-tooltip-field"{if !$settings.product_tooltip|default:'1'} style="display: none;"{/if}>
+                <div class="name">
+                    Текст подсказки
+                </div>
+                <div class="value">
+                    <textarea name="shop_bonuses[product_tooltip_text]">{$settings.product_tooltip_text|default:'За покупку данного товара Вам будет начислено %s бонусов'|escape}</textarea>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="name">
+                    Место вывода на странице товара
+                </div>
+                <div class="value">
+                    <select name="shop_bonuses[frontend_product_output]">
+                        <option {if $settings.frontend_product_output|default:'cart' == '0'} selected{/if} value="0">Не выводить</option>
+                        <option {if $settings.frontend_product_output|default:'cart' == 'menu'} selected{/if} value="menu">Содержимое, добавляемое рядом со ссылками на дополнительные страницы товара (frontend_product.menu)</option>
+                        <option {if $settings.frontend_product_output|default:'cart' == 'cart'} selected{/if} value="cart">Содержимое, добавляемое рядом с кнопкой «В корзину» (frontend_product.cart)</option>
+                        <option {if $settings.frontend_product_output|default:'cart' == 'block_aux'} selected{/if} value="block_aux">Блок дополнительной информации в боковой части страницы (frontend_product.block_aux)</option>
+                        <option {if $settings.frontend_product_output|default:'cart' == 'block'} selected{/if} value="block">Блок дополнительной информации в основной части описания товара (frontend_product.block)</option>
+                    </select>
+                    <p class="hint">
+                        Для вывода используется хук темы дизайна <strong>frontend_product</strong>.<br/>
+                        <strong>{ldelim}shopBonusesPlugin::displayFrontendProduct($product){rdelim}</strong> - хелпер вывода акции в произвольном месте, где $stock_id - идентификатор акции
+                    </p>
+                </div>
+            </div>
+
             {$template = $templates.FrontendProduct}
             {$key = 'FrontendProduct'}
             <div class="field">
                 <div class="name">{$template.name}<br /><span class="hint">HTML + Smarty</span></div>
                 <div class="value no-shift">
-                    <div id="s-editor-core-wrapper">
+                    <a class="edit-template" href="#"><i class="icon16 edit"></i>Изменить шаблон</a>
+                    <div class="template-block">
                         <textarea id="sf-template-{$key}"  class="body" name="templates[{$key}]">{$template.template}</textarea>
+                        {if $template.change_tpl}
+                            <p class="gray"><i class="icon16 exclamation"></i>Внимание! Шаблон по умолчанию был изменен</p>
+                            <input type="checkbox" name="reset_tpls[{$key}]" value="1"  /> - Сбросить изменения, использовать шаблон по умолчанию
+                        {/if}
+
                     </div>
                 </div>
-
-                {if $template.change_tpl}
-                    <div class="value">
-                        <p class="gray"><i class="icon16 exclamation"></i>Внимание! Шаблон по умолчанию был изменен</p>
-                        <input type="checkbox" name="reset_tpls[{$key}]" value="1"  /> - Сбросить изменения, использовать шаблон по умолчанию
-                    </div>
-                {/if}
             </div>
+            <div class="clear-both"></div>
         </div>
-        <div class="field-group">
+
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>
+
+            <h2 class="grey">Страница корзины</h2>
+            <div class="field">
+                <div class="name">
+                    Всплывающая подсказка
+                </div>
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[cart_tooltip]" value="0">
+                    <input{if $settings.cart_tooltip|default:'1'} checked="checked"{/if} type="checkbox" class="ibutton" data-ibutton-field=".cart-tooltip-field" name="shop_bonuses[cart_tooltip]" value="1">
+                    <p class="hint">При клике на бонусы показывать подсказку</p>
+                </div>
+            </div>
+            <div class="field cart-tooltip-field"{if !$settings.cart_tooltip|default:'1'} style="display: none;"{/if}>
+                <div class="name">
+                    Заголовок подсказки
+                </div>
+                <div class="value">
+                    <input type="text" name="shop_bonuses[cart_tooltip_title]" value="{$settings.cart_tooltip_title|default:'Бонусы за покупку'|escape}" />
+                </div>
+            </div>
+            <div class="field cart-tooltip-field"{if !$settings.cart_tooltip|default:'1'} style="display: none;"{/if}>
+                <div class="name">
+                    Текст подсказки
+                </div>
+                <div class="value">
+                    <textarea name="shop_bonuses[cart_tooltip_text]">{$settings.cart_tooltip_text|default:'За оформление данного заказа Вам будет начислено %s бонусов'|escape}</textarea>
+                </div>
+            </div>
             <div class="field">
                 <div class="name">
                     Стандартный вывод бонусов в корзине
                 </div>
-                <div class="value">
-                    <select name="shop_bonuses[frontend_cart]">
-                        <option {if $settings.frontend_cart == 0} selected="selected"{/if} value="0">Выключен</option>
-                        <option {if $settings.frontend_cart == 1} selected="selected"{/if} value="1">Включен</option>
-                    </select>
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[frontend_cart]" value="0">
+                    <input{if $settings.frontend_cart} checked="checked"{/if} type="checkbox" class="ibutton" name="shop_bonuses[frontend_cart]" value="1">
                     <p class="hint">Вы можете отключить стандартный вывод и использовать хелпер вывода {ldelim}shopBonusesPlugin::displayFrontendCart(){rdelim}, чтобы организовать вывод в произвольном месте</p>
                 </div>
             </div>
@@ -171,68 +283,160 @@
             <div class="field">
                 <div class="name">{$template.name}<br /><span class="hint">HTML + Smarty</span></div>
                 <div class="value no-shift">
-                    <div id="s-editor-core-wrapper">
+                    <a class="edit-template" href="#"><i class="icon16 edit"></i>Изменить шаблон</a>
+                    <div class="template-block">
                         <textarea id="sf-template-{$key}"  class="body" name="templates[{$key}]">{$template.template}</textarea>
+                        {if $template.change_tpl}
+                            <p class="gray"><i class="icon16 exclamation"></i>Внимание! Шаблон по умолчанию был изменен</p>
+                            <input type="checkbox" name="reset_tpls[{$key}]" value="1"  /> - Сбросить изменения, использовать шаблон по умолчанию
+                        {/if}
                     </div>
                 </div>
-
-                {if $template.change_tpl}
-                    <div class="value">
-                        <p class="gray"><i class="icon16 exclamation"></i>Внимание! Шаблон по умолчанию был изменен</p>
-                        <input type="checkbox" name="reset_tpls[{$key}]" value="1"  /> - Сбросить изменения, использовать шаблон по умолчанию
-                    </div>
-                {/if}
             </div>
+            <div class="clear-both"></div>
         </div>
 
-        <div class="field-group">
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>
+            <h2 class="grey">Страница в личном кабинете</h2>
+            <div class="field">
+                <div class="name">
+                    Шаблон
+                </div>
+                <div class="value">
+                    <input type="text" name="shop_bonuses[frontend_my_template]" value="{$settings.frontend_my_template|default:'my.affiliate.html'|escape}" />
+                    <p class="hint">Шаблон темы дизайна, который используется для вывода бонусов</p>
+                </div>
+            </div>
             <div class="field">
                 <div class="name">
                     Стандартный вывод бонусов в личном кабинете
                 </div>
-                <div class="value">
-                    <select name="shop_bonuses[frontend_my]">
-                        <option {if $settings.frontend_my == 0} selected="selected"{/if} value="0">Выключен</option>
-                        <option {if $settings.frontend_my == 1} selected="selected"{/if} value="1">Включен</option>
-                    </select>
-                    <p class="hint">Вы можете отключить стандартный вывод и использовать хелпер вывода {ldelim}shopBonusesPlugin::displayFrontendMy(){rdelim}, чтобы организовать вывод в произвольном месте</p>
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[frontend_my_nav]" value="0">
+                    <input{if $settings.frontend_my_nav|default:'1'} checked="checked"{/if} type="checkbox" class="ibutton" name="shop_bonuses[frontend_my_nav]" value="1">
+                    <p class="hint">В строке навигации в личном кабинете выводится ссылка на страницу с информацией о начисленных бонусах</p>
                 </div>
-            </div>
-            {$template = $templates.FrontendMy}
-            {$key = 'FrontendMy'}
-            <div class="field">
-                <div class="name">{$template.name}<br /><span class="hint">HTML + Smarty</span></div>
-                <div class="value no-shift">
-                    <div id="s-editor-core-wrapper">
-                        <textarea id="sf-template-{$key}"  class="body" name="templates[{$key}]">{$template.template}</textarea>
-                    </div>
-                </div>
-
-                {if $template.change_tpl}
-                    <div class="value">
-                        <p class="gray"><i class="icon16 exclamation"></i>Внимание! Шаблон по умолчанию был изменен</p>
-                        <input type="checkbox" name="reset_tpls[{$key}]" value="1"  /> - Сбросить изменения, использовать шаблон по умолчанию
-                    </div>
-                {/if}
             </div>
         </div>
 
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>
+            <h2 class="grey">Уведомления</h2>
+        </div>
 
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>  
+            <h3 class="grey">Начисление бонусов</h3>
+            <div class="field">
+                <div class="name">
+                    Начисление бонусов
+                </div>
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[notification_accrual]" value="0">
+                    <input{if $settings.notification_accrual|default:'1'} checked="checked"{/if} type="checkbox" class="ibutton" data-ibutton-field=".notification-accrual-field" name="shop_bonuses[notification_accrual]" value="1">
+                    <p class="hint">Отправлять клиенту уведомление о начисление бонусов</p>
+                </div>
+            </div>
+            <div class="field notification-accrual-field"{if !$settings.notification_accrual|default:'1'} style="display: none;"{/if}>
+                <div class="name">
+                    Текст уведомления
+                </div>
+                <div class="value">
+                    <textarea name="shop_bonuses[notification_accrual_text]">{$settings.notification_accrual_text|default:'Вам начислено %s бонусов'|escape}</textarea>
+                </div>
+            </div>
+        </div>
 
-        <div class="field">
-            <div class="value submit">
-                <input type="submit" class="button green" value="Сохранить">
-                <span id="plugins-settings-form-status" style="display:none">
-                    <i style="vertical-align:middle" class="icon16 yes"></i> [`Saved`]
-                </span>
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>  
+            <h3 class="grey">Сгорание боносов</h3>
+            <div class="field">
+                <div class="name">
+                    Сгорание бонусов
+                </div>
+                <div class="value no-shift s-ibutton-checkbox">
+                    <input type="hidden" name="shop_bonuses[notification_burn]" value="0">
+                    <input{if $settings.notification_burn|default:'1'} checked="checked"{/if} type="checkbox" class="ibutton" data-ibutton-field=".notification-burn-field" name="shop_bonuses[notification_burn]" value="1">
+                    <p class="hint">Отправлять клиенту уведомление о скором сгорание бонусов</p>
+                </div>
+            </div>
+            <div class="field notification-burn-field"{if !$settings.notification_burn|default:'1'} style="display: none;"{/if}>
+                <div class="name">
+                    Количество дней
+                </div>
+                <div class="value">
+                    <input type="text" name="shop_bonuses[notification_burn_days]" value="{$settings.notification_burn_days|default:'5'|escape}" />
+                    <p class="hint">Если до сгорание бонусов осталось меньше дней чем указано, то покупателю высылается уведомление</p>
+                </div>
+            </div>
+            <div class="field notification-burn-field"{if !$settings.notification_burn|default:'1'} style="display: none;"{/if}>
+                <div class="name">
+                    Текст уведомления
+                </div>
+                <div class="value">
+                    <textarea name="shop_bonuses[notification_burn_text]">{$settings.notification_burn_text|default:'Успейте потратить %s бонусов. До сгорания осталось %d дней.'|escape}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>
+            <div class="field">
+                <div class="value submit">
+                    <input type="submit" class="button green" value="Сохранить">
+                    <span id="plugins-settings-form-status" style="display:none">
+                        <i style="vertical-align:middle" class="icon16 yes"></i> [`Saved`]
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="field-group"{if !$settings.status} style="display:none;"{/if}>
+            <p>
+                <a class="helpers-button" href="#">
+                    <i class="icon16 cheatsheet"></i><b><i>Шпаргалка</i></b>
+                    <i class="icon10 darr no-overhanging"></i>
+                </a>
+            </p>
+            <div class="helpers" style="display:none;">
+                <h2>Хелперы</h2>
+                {literal}
+                    <p><strong>{shopBonusesPlugin::displayFrontendProduct($product)}</strong> - код хелпера для вывода бонусов в карточке товара, $product - переменная товара</p>
+                    <p><strong>{shopBonusesPlugin::displayFrontendCart()}</strong> - код хелпера для вывода бонусов в корзине</p>
+                    <p><strong>{shopBonuses::getContactBonus($contact_id)}</strong> - код хелпера для получения бонусов клиента, $contact_id - переменная с идентификатором контакта клиента</p>
+                {/literal}
             </div>
         </div>
     </form>
 </div>
 <script type="text/javascript">
     $(function () {
+        $('.helpers-button').click(function () {
+            $('.helpers').toggle('slow');
+            return false;
+        });
 
-        var ids = ["sf-template-FrontendProduct", "sf-template-FrontendCart", "sf-template-FrontendMy"];
+        $('.ibutton').iButton({
+            labelOn: "", labelOff: "", className: 'mini'
+        }).change(function () {
+            var field = $(this).data('ibutton-field');
+            if ($(this).is(':checked')) {
+                $(field).show(200);
+            } else {
+                $(field).hide(200);
+            }
+        });
+
+        $('#ibutton-status').iButton({
+            labelOn: "", labelOff: "", className: 'mini'
+        }).change(function () {
+            var self = $(this);
+            var enabled = self.is(':checked');
+            if (enabled) {
+                self.closest('.field-group').siblings().show(200);
+            } else {
+                self.closest('.field-group').siblings().hide(200);
+            }
+            var f = $("#plugins-settings-form");
+            $.post(f.attr('action'), f.serialize());
+        });
+        var ids = ["sf-template-FrontendProduct", "sf-template-FrontendCart"];
         for (var i = 0; i < ids.length; i++) {
 
             var c = CodeMirror.fromTextArea(document.getElementById(ids[i]), {
@@ -263,7 +467,13 @@
                 }, "json")
                 return false;
             });
-
         }
+
+        $('.template-block').hide();
+        $('.edit-template').click(function () {
+            $(this).closest('.field').find('.template-block').toggle('slow');
+            return false;
+        });
+
     });
 </script>

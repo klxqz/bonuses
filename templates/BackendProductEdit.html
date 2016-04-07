@@ -1,0 +1,39 @@
+<div class="clear-both"></div>
+<div class="field-group ">    
+    <div class="field">
+        <div class="name"><h2 class="gray">Бонусы для товара</h2></div>
+        <div class="value no-shift s-ibutton-checkbox">
+            <input type="hidden" name="product[bonuses_use]" value="0" />
+            <input{if $product.bonuses_use} checked="checked"{/if} id="ibutton-product-bonuses" type="checkbox" name="product[bonuses_use]" value="1" />
+            <p class="Использовать индивидуальные настройки бонусов для товара"></p>
+        </div>
+    </div>
+    <div class="field"{if !$product.bonuses_use} style="display: none;"{/if}>
+        <div class="name">Тип бонусов</div>
+        <div class="value no-shift">
+            <input{if $product.bonuses_type == 'percent'} checked="checked"{/if} type="radio" name="product[bonuses_type]" value="percent"> - Процент<br/>
+            <input{if $product.bonuses_type == 'absolute'} checked="checked"{/if} type="radio" name="product[bonuses_type]" value="absolute"> - Абсолют<br/>
+        </div>
+    </div>
+    <div class="field"{if !$product.bonuses_use} style="display: none;"{/if}>
+        <div class="name">Размер бонусов при покупке данного товара</div>
+        <div class="value no-shift">
+            <input type="text" name="product[bonuses_val]" value="{(float)$product.bonuses_val}" class="bold numerical" style="width:100px;">
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('#ibutton-product-bonuses').iButton({
+            labelOn: "", labelOff: "", className: 'mini'
+        }).change(function () {
+            var self = $(this);
+            var enabled = self.is(':checked');
+            if (enabled) {
+                self.closest('.field').siblings('.field').show(200);
+            } else {
+                self.closest('.field').siblings('.field').hide(200);
+            }
+        });
+    });
+</script>

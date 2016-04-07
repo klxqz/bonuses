@@ -9,7 +9,6 @@ class shopBonusesPluginBackendSaveSettingsController extends waJsonController {
     protected $templates = array(
         'FrontendProduct' => array('name' => 'Шаблон для вывода в карточке товара', 'tpl_path' => 'plugins/bonuses/templates/FrontendProduct.html'),
         'FrontendCart' => array('name' => 'Шаблон для вывода в корзине', 'tpl_path' => 'plugins/bonuses/templates/FrontendCart.html'),
-        'FrontendMy' => array('name' => 'Шаблон для вывода в личном кабинете', 'tpl_path' => 'plugins/bonuses/templates/FrontendMy.html'),
     );
     protected $plugin_id = array('shop', 'bonuses');
 

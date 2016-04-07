@@ -7,13 +7,22 @@
 class shopBonusesPluginFrontendProductController extends waJsonController {
 
     public function execute() {
-        $product_id = waRequest::post('product_id');
-        $sku_id = waRequest::post('sku_id');
-        $features = waRequest::post('features');
-        $plugin = wa()->getPlugin('bonuses');
-        
-        $bonus = $plugin->getProductBonus($product_id, $sku_id, $features);
-        $this->response['bonus'] = shop_currency_html($bonus);
+        $app_settings_model = new waAppSettingsModel();
+        if (!$app_settings_model->get(shopBonusesPlugin::$plugin_id, 'status')) {
+            throw new waException(_w('Unknown page'), 404);
+        }
+
+        $product_id = waRequest::post('product_id', 0, waRequest::TYPE_INT);
+        $sku_id = waRequest::post('sku_id', 0, waRequest::TYPE_INT);
+        $features = waRequest::post('features', array(), waRequest::TYPE_ARRAY_INT);
+
+        $bonus = shopBonuses::getProductBonus($product_id, $sku_id, $features);
+        $bonus = shop_currency($bonus);
+        $tooltip_text = $app_settings_model->get(shopBonusesPlugin::$plugin_id, 'product_tooltip_text');
+        $this->response = array(
+            'bonus' => $bonus,
+            'tooltip_text' => sprintf($tooltip_text, $bonus),
+        );
     }
 
 }

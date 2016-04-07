@@ -110,14 +110,14 @@
                 url: '?plugin=bonuses&action=recalculate',
                 dataType: 'json',
                 data: {
-                    use_bonus: $('#use-bonus').val(),
+                    bonuses_use: $('#use-bonus').val(),
                     customer_id: $('#s-customer-id').val()
                 },
                 success: function (data, textStatus, jqXHR) {
                     self.show();
                     $('#loading-recalculate').remove();
                     if (data.status == 'ok') {
-                        $('#use-bonus').val(data.data.use_bonus);
+                        $('#use-bonus').val(data.data.bonuses_use);
                         $.order_edit.updateTotal();
                     } else if (data.status == 'fail') {
                         alert(data.errors);
@@ -141,7 +141,7 @@
                     <em class="hint">Вы можете использовать бонусные баллы для получения скидки. Доступно бонусов: <span class="large bold" id="total-bonus">0</span></em>
                 </td>
                 <td class="align-right nowrap">
-                    &minus; <input type="text" name="use_bonus" id="use-bonus" class="numerical short">
+                    &minus; <input type="text" name="bonuses_use" id="use-bonus" class="numerical short">
                     <span class="currency">{$currency}</span>
                 </td>
                 <td><a class="recalculate_bonus" href="#"><i class="icon16 update"></i></a></td>

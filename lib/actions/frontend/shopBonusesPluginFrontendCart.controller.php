@@ -7,21 +7,16 @@
 class shopBonusesPluginFrontendCartController extends waJsonController {
 
     public function execute() {
-        $plugin = wa()->getPlugin('bonuses');
-        $cart = new shopCart();
-        $items = $cart->items(false);
-        $bonus_service = $plugin->getSettings('bonus_service');
-        $bonus = 0;
-        foreach ($items as $item) {
-            if (!empty($item['product'])) {
-                $bonus += $plugin->getProductBonus($item['product_id'], $item['sku_id']) * $item['quantity'];
-            }
-            if($bonus_service && !empty($item['service'])) {
-                $bonus += $plugin->getBonus($item['service']['price']);
-            }
+        $app_settings_model = new waAppSettingsModel();
+        if (!$app_settings_model->get(shopBonusesPlugin::$plugin_id, 'status')) {
+            throw new waException(_w('Unknown page'), 404);
         }
-        $cart_bonuses = shop_currency_html($bonus);
-        $this->response['cart_bonuses'] = $cart_bonuses;
+        $bonus = shop_currency_html(shopBonuses::getCartBonus());
+        $tooltip_text = $app_settings_model->get(shopBonusesPlugin::$plugin_id, 'cart_tooltip_text');
+        $this->response = array(
+            'bonus' => $bonus,
+            'tooltip_text' => sprintf($tooltip_text, $bonus),
+        );
     }
 
 }
