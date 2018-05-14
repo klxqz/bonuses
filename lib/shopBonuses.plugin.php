@@ -23,6 +23,26 @@ class shopBonusesPlugin extends shopPlugin {
         }
     }
 
+    public function availableСategory() {
+        $contact_id = wa()->getUser()->getId();
+        $model = new waModel();
+        $sql = "SELECT * FROM `wa_contact_categories` WHERE `contact_id` = '" . $model->escape($contact_id) . "'";
+        $categories = $model->query($sql)->fetchAll();
+        $category_ids = array();
+        if ($categories) {
+            foreach ($categories as $category) {
+                $category_ids[] = $category['category_id'];
+            }
+        }
+        $plugin = self::getThisPlugin();
+        $category_id = $plugin->getSettings('category_id');
+        if ($category_id && array_intersect($category_id, $category_ids)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public function backendOrderEdit($order) {
         if ($this->getSettings('status')) {
             $view = wa()->getView();
@@ -132,7 +152,7 @@ class shopBonusesPlugin extends shopPlugin {
     public static function displayFrontendProduct($product) {
         $html = '';
         $plugin = self::getThisPlugin();
-        if ($plugin->getSettings('status')) {
+        if ($plugin->getSettings('status') && $plugin->availableСategory()) {
             $bonus = $plugin->getProductBonus($product['id']);
             $view = wa()->getView();
             $view->assign('bonus', shop_currency_html($bonus));
@@ -155,7 +175,7 @@ class shopBonusesPlugin extends shopPlugin {
     public static function displayFrontendCart() {
         $html = '';
         $plugin = self::getThisPlugin();
-        if ($plugin->getSettings('status')) {
+        if ($plugin->getSettings('status') && $plugin->availableСategory()) {
             $def_currency = wa('shop')->getConfig()->getCurrency(true);
             $cur_currency = wa('shop')->getConfig()->getCurrency(false);
             $session = wa()->getStorage();
@@ -211,7 +231,7 @@ class shopBonusesPlugin extends shopPlugin {
     public static function displayFrontendMy() {
         $html = '';
         $plugin = self::getThisPlugin();
-        if ($plugin->getSettings('status')) {
+        if ($plugin->getSettings('status') && $plugin->availableСategory()) {
             $contact_id = wa()->getUser()->getId();
             $bonus = $plugin->getUnburnedBonus($contact_id);
             $view = wa()->getView();
@@ -257,19 +277,19 @@ class shopBonusesPlugin extends shopPlugin {
     }
 
     public function orderActionPay($params) {
-        if ($this->getSettings('status') && $this->getSettings('order_status') == 'pay') {
+        if ($this->getSettings('status') && $this->availableСategory() && $this->getSettings('order_status') == 'pay') {
             $this->addBonusesOrder($params['order_id']);
         }
     }
 
     public function orderActionComplete($params) {
-        if ($this->getSettings('status') && $this->getSettings('order_status') == 'complete') {
+        if ($this->getSettings('status') && $this->availableСategory() && $this->getSettings('order_status') == 'complete') {
             $this->addBonusesOrder($params['order_id']);
         }
     }
 
     public function orderActionRefund($params) {
-        if ($this->getSettings('status')) {
+        if ($this->getSettings('status') && $this->availableСategory()) {
             $def_currency = wa('shop')->getConfig()->getCurrency(true);
             $order_model = new shopOrderModel();
             $order = $order_model->getOrder($params['order_id']);
@@ -294,7 +314,7 @@ class shopBonusesPlugin extends shopPlugin {
     }
 
     public function orderCalculateDiscount($params) {
-        if ($this->getSettings('status')) {
+        if ($this->getSettings('status') && $this->availableСategory()) {
             $session = wa()->getStorage();
             $backend = (wa()->getEnv() == 'backend');
             if ($backend) {
@@ -327,7 +347,7 @@ class shopBonusesPlugin extends shopPlugin {
     }
 
     public function orderActionCreate() {
-        if ($this->getSettings('status')) {
+        if ($this->getSettings('status') && $this->availableСategory()) {
             $session = wa()->getStorage();
             $use_bonus = $session->read('use_bonus');
             if ($use_bonus) {
@@ -362,7 +382,7 @@ class shopBonusesPlugin extends shopPlugin {
     }
 
     public function getBonus($price, $percent = null) {
-        if ($this->getSettings('status')) {
+        if ($this->getSettings('status') && $this->availableСategory()) {
 
             if (!$percent) {
                 $percent = $this->getSettings('percent');

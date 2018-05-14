@@ -17,9 +17,16 @@ class shopBonusesPluginBackendSaveSettingsController extends waJsonController {
         try {
             $app_settings_model = new waAppSettingsModel();
             $settings = waRequest::post('shop_bonuses');
+            if (empty($settings['category_id'])) {
+                $settings['category_id'] = array();
+            }
 
             foreach ($settings as $name => $value) {
-                $app_settings_model->set($this->plugin_id, $name, $value);
+                if (is_array($value)) {
+                    $app_settings_model->set($this->plugin_id, $name, json_encode($value));
+                } else {
+                    $app_settings_model->set($this->plugin_id, $name, $value);
+                }
             }
 
             $post_templates = waRequest::post('templates');

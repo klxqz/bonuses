@@ -11,11 +11,10 @@ class shopBonusesPluginSettingsAction extends waViewAction {
         'FrontendCart' => array('name' => 'Шаблон для вывода в корзине', 'tpl_path' => 'plugins/bonuses/templates/FrontendCart.html'),
         'FrontendMy' => array('name' => 'Шаблон для вывода в личном кабинете', 'tpl_path' => 'plugins/bonuses/templates/FrontendMy.html'),
     );
-    protected $plugin_id = array('shop', 'bonuses');
 
     public function execute() {
-        $app_settings_model = new waAppSettingsModel();
-        $settings = $app_settings_model->get($this->plugin_id);
+        $plugin = shopBonusesPlugin::getThisPlugin();
+        $settings = $plugin->getSettings();
         foreach ($this->templates as &$template) {
             $template['full_path'] = wa()->getDataPath($template['tpl_path'], false, 'shop', true);
             if (file_exists($template['full_path'])) {
@@ -27,6 +26,9 @@ class shopBonusesPluginSettingsAction extends waViewAction {
             $template['template'] = file_get_contents($template['full_path']);
         }
 
+        $ccm = new waContactCategoryModel();
+        $categories = $ccm->getByField('app_id', 'shop', true);
+        $this->view->assign('categories', $categories);
         $this->view->assign('settings', $settings);
         $this->view->assign('templates', $this->templates);
     }

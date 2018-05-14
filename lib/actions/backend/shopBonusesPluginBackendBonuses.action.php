@@ -7,7 +7,7 @@
 class shopBonusesPluginBackendBonusesAction extends waViewAction {
 
     public function execute() {
-echo time();
+
         $bonuses_model = new shopBonusesPluginModel();
         $offset = waRequest::get('offset', 0, waRequest::TYPE_INT);
         $total_count = waRequest::get('total_count', null, waRequest::TYPE_INT);

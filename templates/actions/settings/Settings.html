@@ -34,6 +34,25 @@
                     </select>
                 </div>
             </div>
+            <div class="field">
+                <div class="name">
+                    Категории покупателей, для которых работают бонусы
+                </div>
+                <div class="value">
+                    <ul class="menu-v">
+                        {foreach $categories as $category}
+                            <li>
+                                <i class="icon16 {$category.icon}"></i> <input type="checkbox" name="shop_bonuses[category_id][]" value="{$category.id}"{if in_array($category.id, $settings.category_id|default:[])} checked{/if}/>
+                                {if $category.id}
+                                    <a target="_blank" class="inline" href="?action=customers#/category/{$category.id}">
+                                        {$category.name} <i class="icon10 new-window"></i>
+                                    </a>
+                                {/if}
+                            </li>
+                        {/foreach}
+                    </ul>
+                </div>
+            </div>
 
             <div class="field">
                 <div class="name">
