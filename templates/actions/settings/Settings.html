@@ -47,6 +47,8 @@
                                     <a target="_blank" class="inline" href="?action=customers#/category/{$category.id}">
                                         {$category.name} <i class="icon10 new-window"></i>
                                     </a>
+                                {else}
+                                    {$category.name} 
                                 {/if}
                             </li>
                         {/foreach}

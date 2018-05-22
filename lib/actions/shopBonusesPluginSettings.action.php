@@ -26,8 +26,15 @@ class shopBonusesPluginSettingsAction extends waViewAction {
             $template['template'] = file_get_contents($template['full_path']);
         }
 
+        $categories = array();
+        $categories[] = array(
+            'id' => 0,
+            'name' => 'Все покупатели',
+            'icon' => 'contact',
+        );
         $ccm = new waContactCategoryModel();
-        $categories = $ccm->getByField('app_id', 'shop', true);
+        $categories = array_merge($categories, $ccm->getByField('app_id', 'shop', true));
+
         $this->view->assign('categories', $categories);
         $this->view->assign('settings', $settings);
         $this->view->assign('templates', $this->templates);

@@ -36,7 +36,8 @@ class shopBonusesPlugin extends shopPlugin {
         }
         $plugin = self::getThisPlugin();
         $category_id = $plugin->getSettings('category_id');
-        if ($category_id && array_intersect($category_id, $category_ids)) {
+
+        if ($category_id && (array_intersect($category_id, $category_ids) || in_array(0, $category_id))) {
             return true;
         } else {
             return false;
